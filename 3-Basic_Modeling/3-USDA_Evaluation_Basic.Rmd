@@ -1,0 +1,276 @@
+---
+title: "3-USDA Evaluation Basic"
+author: "Robert Dinterman"
+date: '`r Sys.Date()`'
+output: pdf_document
+---
+
+```{r, include=FALSE}
+library(knitr)
+opts_knit$set(root.dir = normalizePath(".."))
+read_chunk("3-USDA_Evaluation_Basic.R")
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, dev='png')
+#pdf.options(useDingbats = TRUE)
+```
+
+```{r load, include=FALSE}
+<<Start>>
+```
+
+# Basic Panel Regressions for Broadband Availability
+
+The following regressions make use of the `plm` package in `R` in order to identify the relationship between broadband availability and the USDA Broadband Loan Program. Loosely, we wish to model the number of broadband providers by zip code across the years 1999 to 2008 and determine whether or not the USDA Broadband Loan Program had an impact on broadband availability as this was one of the intended benefits of the subsidized loans. As a quick reference, here is what the dependent variable looks like across time:
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+hp <- ggplot(pdata, aes(x = Prov_num)) + geom_histogram() + theme_minimal()
+grid.arrange(hp + scale_x_discrete(breaks = c(5, 10, 15, 20, 25)) +
+               labs(title = "Number of Providers (Pooled)", x= "", y = "Count"),
+             hp + scale_x_discrete(breaks = c(5, 10, 15)) + facet_wrap(~ year) +
+               coord_cartesian(xlim = c(0, 15)) +
+               labs(title = "Across Years", x= "", y = ""),
+             ncol = 2)
+```
+
+Data on broadband providers is measured twice a year (June 30 and December 31), therefore the two values are averaged for the yearly value. Further, the variable takes on a count value of 0, 1-3\*, 4, 5, 6, ... 31. The value 1-3\* is a suppressed value of broadband providers for confidentiality purposes and has been coded as 2 to be consistent with the literature.
+
+Other variables used include:
+
+* `iloans` - an indicator variable for whether or not a zip code received a loan. No loans were given before 2002, so this variable does vary by time.
+* `log(est)` - this is from zip code business pattern data and is the number of establishments in a particular zip code. I take the log of this variable because the distribution is right-skewed. It is possible to substitute this variable with number of employees, annual payroll, or first quarter payroll from the ZBP but I choose not to because those variables are **suppressed for approximately `r paste0(format(sum(pdata$ap == 0) / sum(!is.na(pdata$ap))*100, digits = 2), "%")` of the zip codes**. Establishments is highly correlated with the other variables anyway, so I would rather use a less precise proxy than potentially bias the sample.
+* `log(Pop_IRS)` - IRS has data on number of tax returns filed by county from 1989 until 2013. I use the number of exemptions per county as a way to proxy for the population of a county. This variable is also right-skewed and therefore the log of population is taken instead of population. The alternative for population would be to use US Census data which produce yearly estimates at the county level. These estimates are based off of the 2000 Census and use the demographic age distribution of a county in order to project forward the birth rate and death rate to determine what the population in a county should be. Since this is simply a function of initial conditions in 2000, I choose to use IRS data because there is more variation in the data and it reflects changes in economic conditions across counties that would drive migration (population change).
+* `logINC` - this is tabulated from the same IRS data above using Adjusted Gross Income (AGI) at the county level for each year. This is divided by the number of households for a county and is therefore a proxy for mean income, as reported to the IRS, per year. Again, this is a right-skewed variable which is the justification for taking the logarithm of the variable.
+* `tri` - stands for Terrain Ruggedness Index which uses elevation data for a given polygon to calculate the feature changes in a given area relative to the entire domain. This is at the ZCTA level across the United States and is thought of as a proxy for increased costs of broadband deployment due to rough terrain. This does not vary across years and so zip code fixed effects will take away this variable.
+* `ruc` - the rural-urban continuum code, but for this study I simply use 3 classifications of a county: Metro, Rural but adjacent to a metro county, and Rural but non-adjacent to a metro county. Counties do change across time, but only in years that end in 3 (1993, 2003, ...). I choose to use the values for 2003 as this would be a little bit before the halfway point in the analysis.
+
+## Static Models
+
+I start with a naive relationship to model number of broadband providers in a Static Panel framework as follows:
+
+$$ {Prov}_{z,t} = \mu_{z} + \tau_{t} + \beta_1 {Loan}_{z,t} + \beta_2 X_{z,t} + \varepsilon_{z,t} + \alpha_{z} + \alpha_{t} $$
+
+The variable ${Prov}_{z,t}$ is the number of providers in zip code $z$ at time $t$. The $\mu_{z}$ parameter is a zip code level fixed effect that may or may not be present in the particular model; $\tau_{t}$ is a year fixed effect that may or may not be present;  $\alpha_{z}$ is a zip code random effect that may or may not be present in the model; $\alpha_{t}$ is a year random effect that may or may not be present in the model; and the particular variable of interest is ${Loan}_{z,t}$ which is a dummy variable indicating if a zip code has been awarded (and assumed deployed) a subsidized loan from the USDA.
+
+### Pooled Regression
+
+Assumes no fixed or random effects, effectively treating the regression as if the entire sample were taken from the same population:
+
+```{r Pooled}
+<<Pooled>>
+```
+
+There are no controls for time or zip code effects and this gives the result that the Broadband Loan Programs were effective in adding `r format(pool1$coefficients["iloans"], digits = 3)` broadband providers per zip code across 1999 to 2008. However, if we turn to a few casual diagnostics we can see that a pooled model is not appropriate:
+
+```{r Pooled_Figs}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(pdata$Prov_num - pool1$residuals, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(scale(pool1$residuals), main = "Pooled Q-Q Plot")
+qqline(scale(pool1$residuals), col = 2, lwd = 2, lty = 2)
+```
+
+The fit of the model is poor as we can see that the distribution of fitted values appears to have a normal distribution to it even though the overall distribution of broadband providers is clearly right-skewed and contains no negative values. Also, there appears to be divergence from the normality assumption of the errors by referencing the Quantile-Quantile plot. If the distribution of residuals was normal, then the residuals should be neatly ordered around the red line. There is a fair disturbance form this, and we can stratify the residuals by year to see this better:
+
+```{r}
+d <- data.frame(resids = scale(pool1$residuals), year = pdata$year)
+y <- quantile(d$resids, c(0.25, 0.75))
+x <- qnorm(c(0.25, 0.75))
+slope <- diff(y)/diff(x)
+int <- y[1L] - slope * x[1L]
+ggplot(data=d, aes(sample = resids)) +
+    stat_qq(shape=1, size=3) +           # open circles
+    labs(title="Normal Q-Q Across Years",# plot title
+         x="Theoretical Quantiles",      # x-axis label
+         y="Standardized Residuals") +   # y-axis label
+    geom_abline(slope = slope, intercept = int,
+                linetype="dashed", color = "red") +
+  facet_wrap(~ year) + theme_minimal()
+```
+
+
+### Fixed Effects Regressions
+
+Three fixed effects models:
+
+1. **Zip Code Fixed Effects:** this implies that `tri` and `ruc` cannot be estimated due to their time-invariant nature.
+    * $\mu_{z}$ is present in the model.
+2. **Year Fixed Effects:** this implies that there are separate time dummy variables for 2000 to 2008 (1999 is omitted). The effects of `tri` and `ruc` can be estimated.
+    * $\tau_{t}$ is present in the model.
+3. **Zip Code and Year Fixed Effects:** this is a combination of the two and therefore `tri` and `ruc` cannot be estimated.
+    * $\mu_{z}$ and $\tau_{t}$ are present in the model.
+4. **First Difference:** takes the difference between time $t$ and $t-1$, which will not allow for `tri` or `ruc` to be estimated. An advantage to this model is that serial correlation should be reduced, although it is not guaranteed to be eliminated.
+
+```{r Fixed}
+<<Fixed>>
+```
+
+Standard errors are not robust in this setting, which likely implies that they are too small for proper testing inference. For the purposes of our interest, the significance of the loan $\beta_{1}$, is significantly positive for the first and third models but not significant for the second and fourth. The first, third, and fourth cannot identify the effects of zip code terrain on broadband deployment as well as the potential urban versus rural divide.
+
+The first, third, and fourth models are likely incorrect for any inference that we would want to pursue. A big reason for this is because of the consistently negative associated coefficient with income. From an intuitive economic perspective, this does not make sense that areas with higher income would tend to have less broadband access. The logical conclusion of this would be that poorer areas have more access to broadband and common sense dictates this is not true (and the literature tends to find positive association with income and broadband access).
+
+The second model is appealing because we see the expected signs across establishments, population, income, and terrain. It is slightly puzzling that rural non-adjacent counties tend to have more broadband access than urban and rural-adjacent counties. As a cross check, we can look at the time fixed effects model's fitted values and its Q-Q plot to verify whether or not the model has some bite to it:
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(pdata$Prov_num - p1t$residuals, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(scale(p1t$residuals), main = "Time Fixed Effects Q-Q Plot")
+qqline(scale(p1t$residuals), col = 2, lwd = 2, lty = 2)
+```
+
+We observe that the fitted values appear more normal than in the pooled ols model with the same problem of negative predicted values. Further, divergence from normality appears to still be a problem although the negative distribution of residuals looks to be better. To further inspect this model across time, here is a year-by-year look at the Q-Q plot:
+
+```{r}
+d <- data.frame(resids = scale(p1t$residuals), year = pdata$year)
+y <- quantile(d$resids, c(0.25, 0.75))
+x <- qnorm(c(0.25, 0.75))
+slope <- diff(y)/diff(x)
+int <- y[1L] - slope * x[1L]
+ggplot(data=d, aes(sample = resids)) +
+    stat_qq(shape=1, size=3) +           # open circles
+    labs(title="Normal Q-Q Across Years",# plot title
+         x="Theoretical Quantiles",      # x-axis label
+         y="Standardized Residuals") +   # y-axis label
+    geom_abline(slope = slope, intercept = int,
+                linetype="dashed", color = "red") +
+  facet_wrap(~ year) + theme_minimal()
+```
+
+It is enlightening that the divergence in the upper part of the distribution begins around 2002 and increases to 2008.
+
+### Random Effects Regressions
+
+Three random effects models:
+
+1. **Zip Code Random Effects:** implies an error component in the model which that is uncorrelated with the other regressors.
+    * $\alpha_{z}$ is present.
+2. **Year Random Effects:** implies
+    * $\alpha_{t}$ is present.
+3. **Zip Code and Year Random Effects:** implies
+    * Both $\alpha_{z}$ and $\alpha_{t}$ are present.
+
+All the models assume homoskedastic error variances, which may understate the true amount of variation present in the data. This will only matter in the event that we find a significant effect associated with the loan program. Failure to find a significant relationship with assumed homoskedastic errors should only be strengthened with robust standard errors.
+
+```{r Random}
+<<Random>>
+```
+
+Allowing for random intercepts across zip codes results in a significant relationship for the loan program to the effect of `r format(r1$coefficients["iloans"], digits = 3)` more broadband providers across 1999 to 2008. We also see the puzzling result that more income is associated with lower levels of broadband and rural non-adjacent counties have higher levels of broadband. These are at odds to what common sense dictates.
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(pdata$Prov_num - r1$residuals, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(scale(r1$residuals), main = "Zip Code Effects Q-Q Plot")
+qqline(scale(r1$residuals), col = 2, lwd = 2, lty = 2)
+```
+
+We do see that there is improvement of predicted values from the pooled and fixed effects models in that there are fewer negative values. Also, the distribution of fitted values is much improved as there is a slight right-skew to better match the observed values. However, the Q-Q plot points to divergence from normality of our residuals, thus making inference improper in this setting.
+
+If we look at the random effects model across time, the coefficients make more sense in that income is positively related to broadband access. We still see that there is a negative association with rural-adjacent counties, which appears to be counter-intuitive. In this setting, the loans appear to not have an affect on broadband access. Further inspection of residuals and fitted values is needed:
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(pdata$Prov_num - r1t$residuals, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(scale(r1t$residuals), main = "Yearly Random Effects Q-Q Plot")
+qqline(scale(r1t$residuals), col = 2, lwd = 2, lty = 2)
+```
+
+We do see that there is improvement of predicted values from the pooled and fixed effects models in that there are fewer negative values. Also, the distribution of fitted values is still decidedly normal while our observed values are not. The Q-Q plot also points to divergence from normality of our residuals, thus making inference improper in this setting.
+
+Finally, turning to a random effects model incorporating both the zip code and yearly random effects yields a mixture between the previous models. The counter-intuitive result that income is negatively related to broadband access still appears, which is concerning. Further inspection of the residuals is interesting:
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(pdata$Prov_num - r12$residuals, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(scale(r12$residuals), main = "Twoways Random Effects Q-Q Plot")
+qqline(scale(r12$residuals), col = 2, lwd = 2, lty = 2)
+```
+
+The fitted values appear closest to the observed values, however the Q-Q plot of the residuals indicates a large divergence from the normality assumption. None of these models are appealing to consider inference upon the USDA Broadband Loan Program.
+
+### Model Testing and Diagnostics
+
+The most obvious tests are to first check whether we have Fixed Effects or Random Effects through a Hausman test. Below are the Hausman tests matched up from the models above as 1. to 1.; 2. to 2.; and 3. to 3.
+
+```{r Tests}
+<<Tests>>
+```
+
+Tests appear to indicate the model of choice would be the fixed effects estimator for 1. and 3. (zip code and two-way effects) of the competing models due to rejection of the null. It is interesting to note that for the 2. model (yearly effects) we see that the null is not rejected which would indicate that both estimators are consistent and the random effects estimator is more efficient.
+
+***OTHER DIAGNOSTIC CHECKS WERE DONE BUT I AM SUPPRESSING THEM BECAUSE IT SEEMS OBVIOUS TO ME THAT STATIC PANEL ESTIMATORS ARE NOT APPLICABLE TO BROADBAND DIFFUSION.***
+
+One implication for this would be to have a mixed model where there are fixed zip code effects but yearly random effects. But I take this as evidence that none of these models are appealing to use because there are better methods available for estimation.
+
+For instance, knowing that the dependent variable is generally increasing over time, and that once a broadband provider forms in one zip code they are likely to exist for multiple periods further, we know that models which do not account for previous number of broadband providers will not accurately reflect reality. Because of this, we proceed onto a more complex model by lagging the dependent variable. As a quick check for whether or not this may be appropriate, I present tests of serial correlation for the six models that I have discussed in this section to motive that use of a Dynamic Panel Model:
+
+```{r Serial}
+<<Serial>>
+```
+
+And further, I have taken the year fixed effects model and calculated the correlation of residuals across time as another way to indicate serial correlation is present in the models:
+
+```{r}
+d   <- data.frame(resids = scale(p1t$residuals), year = pdata$year)
+dx  <- split(d$resids, d$year)
+dxx <- do.call(cbind, dx)
+kable(cor(dxx))
+```
+
+## Dynamic Models
+
+The dynamic model implies a different form of broadband diffusion:
+
+$$ {Prov}_{z,t} = \mu_{z} + \rho {Prov}_{z, t-1} + \beta_1 {Loan}_{z,t} + \beta_2 X_{z,t} + \varepsilon_{z,t} $$
+
+This is a more sophisticated model and requires different estimation technique to handle the endogenous ${Prov}_{z, t-1}$ on the right hand side. The obvious solution is to use a Generalized Method of Moments (GMM) estimator and have further lags of the dependent variable as instruments. In this setting, time-invariant effects cannot be estimated nor can year fixed/random effects.
+
+The `plm` package allows for three estimators that can be useful here:
+
+1. **Zip Code Fixed Effects OLS:** simply adds in a lagged value of number of broadband providers and treats it as exogenous. Obvious bias.
+2. **GMM:** uses lagged values of broadband as an instrument, I also include `tri` as an instrument. No fixed effects are present, although implicitly the auto-regression of the dependent variable should be better capture variation over time.
+3. **GMM with Zip Code Fixed Effects:** same instruments as above, however this includes a zip code fixed effect to capture unobserved heterogeneity across zip codes.
+
+```{r Dynamic}
+<<Dynamic>>
+```
+
+We can toss out the OLS estimator as the coefficients make no sense and we already know that the estimator is not consistent. It is useful to show because if this estimator was similar to GMM, then that would be indication that GMM is not necessary.
+
+Both of the GMM estimators indicate the perplexing result that income is negatively associated with broadband access. This gives pause to use of these models and I have been attempting to figure out why this is the case. Possibly more puzzling is that when fixed effects are added, the auto-regressive parameter becomes larger than 1 which would imply an explosive process. I have to think this through a bit more, but it is likely the case that fitting a linear curve to a technology with rapid adoption would pose a problem.
+
+However, if we inspect the fitted values and Q-Q plots of the residuals we can see that a sophisticated model may not always be better:
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+r <- scale(as.vector(unlist(dp1$residuals)))
+hist(dp1$fitted.values, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(r, main = "Dynamic GMM Q-Q Plot")
+qqline(r, col = 2, lwd = 2, lty = 2)
+```
+
+The above is the second model. It is troublesome that there are fitted values that are drastically negative, but even more of a problem is that the Q-Q plot is nowhere close to normal. But adding in fixed effects is clearly not the solution:
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+r <- scale(as.vector(unlist(dp2$residuals)))
+hist(dp2$fitted.values, main = "Histogram of Fitted Values",
+     xlab = "Predicted Values")
+qqnorm(r, main = "Dynamic GMM Q-Q Plot")
+qqline(r, col = 2, lwd = 2, lty = 2)
+```
+
+While there is improvement of the predicted values, the Q-Q plot is even worse. A dynamic model is certainly not the solution here.
+
+
+# Next Step
+
+We know that our dependent variable is a count variable and can only take on positive values. A model which predicts negative values for Broadband Providers indicates a problem. We know that this cannot happen and divergence from this too far will render this modeling exercise meaningless. This is why a Poisson Regression appears to be the best choice. I have results for this, but I need to format it so the results can be displayed. I am not sure how quickly I can do that.
