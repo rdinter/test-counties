@@ -59,7 +59,7 @@ save(cbpimpute, file = "0-Data/CBP/CBPimpute.Rda")
 
 cbpfull <- expand.grid(fips = unique(cbpimpute$fips),
                        year = unique(cbpimpute$year))
-cbpfull <- left_join(cbpfull, select(cbpimpute, fips, year, emp:year, emp_))
+cbpfull <- left_join(cbpfull, select(cbpimpute, fips, year, emp:est, emp_))
 
 library(zoo)
 cbpfull %>%
