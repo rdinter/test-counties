@@ -1,4 +1,4 @@
-#Robert Dinterman, NCSU Economics PhD Student
+#Robert Dinterman
 
 print(paste0("Started 0-IRS_Mig at ", Sys.time()))
 
@@ -7,6 +7,7 @@ suppressMessages(library(dplyr))
 suppressMessages(library(gdata))
 suppressMessages(library(readxl))
 suppressMessages(library(readr))
+suppressMessages(library(stringr))
 
 
 #Problem for excel files with "us" from 1998.99 until 2001.2
@@ -31,11 +32,11 @@ data_source <- paste0(localDir, "/Raw")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
 
-tempDir  <- tempdir()
+tempDir  <- tempfile()
 # unlink(tempDir, recursive = T)
 
-#####
-# IRS Migration Data for 1992 to 2004
+
+# ---- IRS Migration Data for 1992 to 2004 --------------------------------
 #http://www.irs.gov/uac/SOI-Tax-Stats-Migration-Data
 
 url    <- "http://www.irs.gov/file_source/pub/irs-soi/"
@@ -74,7 +75,7 @@ for (i in files){
                                     gsub(",", "", 
                                          gsub("[A-z]", "", xx)))
                                 })
-    data[,c(5:6)]     <- lapply(data[,c(5:6)], function(xx){as.character(xx)})
+    data[,c(5:6)]     <- lapply(data[,c(5:6)], function(xx){toupper(xx)})
     names(data)       <- namesi
     
     data <- filter(data, !is.na(State_Code_Dest))
@@ -102,7 +103,7 @@ for (i in files){
                                     gsub(",", "", 
                                          gsub("[A-z]", "", xx)))
                                 })
-    data[,c(5:6)]     <- lapply(data[,c(5:6)], function(xx){as.character(xx)})
+    data[,c(5:6)]     <- lapply(data[,c(5:6)], function(xx){toupper(xx)})
     names(data)       <- nameso
     
     data <- filter(data, !is.na(State_Code_Origin))
@@ -145,6 +146,8 @@ indata   <- sapply(inflows, function(x){
                                              "State_Abbrv", "County_Name",
                                              "Return_Num", "Exmpt_Num",
                                              "Aggr_AGI"), skip = 1)
+  data[,c(5:6)]     <- lapply(data[,c(5:6)],
+                              function(xx){toupper(str_trim(xx))})
   data$year  <- 1999 + as.numeric(substr(x, nchar(x) - 5, nchar(x) - 4))
   data$ofips <- data$State_Code_Origin*1000 + data$County_Code_Origin
   data$dfips <- data$State_Code_Dest*1000   + data$County_Code_Dest
@@ -169,6 +172,8 @@ outdata  <- sapply(inflows, function(x){
                                              "County_Code_Dest", "State_Abbrv",
                                              "County_Name", "Return_Num",
                                              "Exmpt_Num", "Aggr_AGI"), skip = 1)
+  data[,c(5:6)]     <- lapply(data[,c(5:6)],
+                              function(xx){toupper(str_trim(xx))})
   data$year  <- 1999 + as.numeric(substr(x, nchar(x) - 5, nchar(x) - 4))
   data$ofips <- data$State_Code_Origin*1000 + data$County_Code_Origin
   data$dfips <- data$State_Code_Dest*1000   + data$County_Code_Dest
@@ -182,9 +187,23 @@ write_csv(allout, paste0(localDir, "/outflows0413.csv"))
 rm(indata, outdata)
 
 allindata  <- bind_rows(allindata, allin)
-alloutdata <- bind_rows(alloutdata, allout)
-
+allindata$Return_Num  <- ifelse(is.na(allindata$Return_Num), -1,
+                                allindata$Return_Num)
+allindata$Exmpt_Num   <- ifelse(is.na(allindata$Exmpt_Num), -1,
+                                allindata$Exmpt_Num)
+allindata$Aggr_AGI    <- ifelse(is.na(allindata$Aggr_AGI), -1,
+                                allindata$Aggr_AGI)
 save(allindata,  file = paste0(localDir, "/inflows9213.Rda"))
+rm(allindata)
+
+
+alloutdata <- bind_rows(alloutdata, allout)
+alloutdata$Return_Num  <- ifelse(is.na(alloutdata$Return_Num), -1,
+                                alloutdata$Return_Num)
+alloutdata$Exmpt_Num   <- ifelse(is.na(alloutdata$Exmpt_Num), -1,
+                                alloutdata$Exmpt_Num)
+alloutdata$Aggr_AGI    <- ifelse(is.na(alloutdata$Aggr_AGI), -1,
+                                alloutdata$Aggr_AGI)
 save(alloutdata, file = paste0(localDir, "/outflows9213.Rda"))
 
 rm(list = ls())

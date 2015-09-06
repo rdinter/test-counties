@@ -1,5 +1,7 @@
 # Robert Dinterman
 
+# ---- Start --------------------------------------------------------------
+
 print(paste0("Started 2-USDA_Evaluation_Figures at ", Sys.time()))
 
 suppressMessages(library(dplyr))
@@ -20,6 +22,8 @@ data$Prov_hist <- ifelse(data$Prov_num == 2,
                          runif(sum(data$Prov_num == 2),1,3),
                          data$Prov_num)
 
+
+# ---- Zip time -----------------------------------------------------------
 hp <- ggplot(data, aes(x = Prov_hist)) + geom_histogram() +
   coord_cartesian(xlim = c(0, 15)) 
 hp + facet_wrap(~ time) + theme_minimal() +
@@ -28,7 +32,8 @@ hp + facet_wrap(~ time) + theme_minimal() +
        #title = "Broadband Providers by Zip Code \n Across Time")
 ggsave(paste0(localDir, "/Providers_zip_time.png"), width = 10, height = 7.5)
 
-# Plot for uptake
+
+# ---- Zip Uptake ---------------------------------------------------------
 data %>%
   group_by(time) %>%
   summarise(Access = sum(Prov_num > 0) / n()) -> access
@@ -38,7 +43,8 @@ sc1 + stat_smooth() + theme_minimal() +
        #title = "Zip Codes with Broadband Access")
 ggsave(paste0(localDir, "/ZIP_no_bb_up.png"), width = 10, height = 7.5)
 
-# Plot for no access
+
+# ---- Zip Downtake -------------------------------------------------------
 data %>%
   group_by(time) %>%
   summarise(Access = sum(Prov_num == 0) / n()) -> noaccess
@@ -48,6 +54,8 @@ sc2 + stat_smooth() + theme_minimal() +
        #title = "Zip Codes without Broadband Access")
 ggsave(paste0(localDir, "/ZIP_no_bb_down.png"), width = 10, height = 7.5)
 
+
+# ---- Loan Time ----------------------------------------------------------
 # When did the loans occur:
 ltime <- data.frame(loan = c("Pilot", "Current"),
                     time = as.numeric(as.Date(c("2001-12-31", "2003-12-31"))),
@@ -64,7 +72,7 @@ ggplot(ggloans, aes(x = year, y = loans)) + geom_line() + theme_minimal() +
   scale_y_continuous(breaks = seq(0, 3000, 500)) +
   geom_vline(xintercept = 2002, color = "black", linetype = "longdash") +
   geom_vline(xintercept = 2004, color = "red", linetype = "longdash") +
-  labs(x = "", y = "Cumulative Loans Awarded")#,
+  labs(x = "", y = "Cumulative Loans Awarded by Zip Code")#,
        #title = "USDA Loans by Zip Code \n Across Time")
 ggsave(paste0(localDir, "/Loan_award_time.png"), width = 10, height = 7.5)
 
@@ -72,8 +80,8 @@ ggsave(paste0(localDir, "/Loan_award_time.png"), width = 10, height = 7.5)
 # ggplot(mtc, aes(x = factor(gear))) + geom_bar(stat = "bin")
 
 
-# Summary for all across time ... ? But these are ZIPS not FIPS -----------
-
+# ---- Zip Attributes -----------------------------------------------------
+# Summary for all across time ... ? But these are ZIPS not FIPS
 data %>%
   group_by(year) %>%
   distinct(zip) %>%
@@ -138,8 +146,8 @@ pta <- select(pta, year:n, Providers, Establishments, Employed, TRI)
 write.csv(pta, paste0(localDir, "/Zip_Stats.csv"), row.names = F)
 stargazer(pta, summary = F, rownames = F)
 
-# Try this with a ggplot2 description... ----------------------------------
 
+# ---- Zip Attributes Graph -----------------------------------------------
 data %>%
   select(zip, time, Prov_hist, est, emp_) %>%
   gather(key, value, Prov_hist, est, emp_) -> all
@@ -172,19 +180,17 @@ test$class <- factor(test$class, levels = c("No Loan", "Pilot", "Current"),
 levels(test$key) <- c("Providers", "Establishments", "Employed")
 test$key <- factor(test$key, levels=rev(levels(test$key)))
 
-ggplot(filter(test, key == "Providers"),
-       aes(x = time, y = value, colour = class, group = class)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "smooth") + theme_minimal()
-
-ggplot(filter(test, key == "Establishments"),
-       aes(x = time, y = value, colour = class, group = class)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "smooth") + theme_minimal()
-
-ggplot(filter(test, key == "Employed"),
-       aes(x = time, y = value, colour = class, group = class)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "smooth") + theme_minimal()
-
-# facet_grid
+# ggplot(filter(test, key == "Providers"),
+#        aes(x = time, y = value, colour = class, group = class)) +
+#   stat_summary(fun.data = "mean_cl_boot", geom = "smooth") + theme_minimal()
+# 
+# ggplot(filter(test, key == "Establishments"),
+#        aes(x = time, y = value, colour = class, group = class)) +
+#   stat_summary(fun.data = "mean_cl_boot", geom = "smooth") + theme_minimal()
+# 
+# ggplot(filter(test, key == "Employed"),
+#        aes(x = time, y = value, colour = class, group = class)) +
+#   stat_summary(fun.data = "mean_cl_boot", geom = "smooth") + theme_minimal()
 
 ggplot(test,aes(x = time, y = value, color = class, group = class)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "smooth", size = 2) +
@@ -201,8 +207,8 @@ ggplot(test,aes(x = time, y = value, color = class, group = class)) +
 ggsave(paste0(localDir, "/Zip_attributes.png"), width = 10, height = 7.5)
 
 rm(access, all, all1, all2, all3, all4, test)
-# FIPS Data ---------------------------------------------------------------
 
+# ---- FIP Data -----------------------------------------------------------
 # data %>%
 #   group_by(year) %>%
 #   distinct(fips) %>%
@@ -233,6 +239,7 @@ fipdata <- data %>%
 #             HHInc_IRS = mean(HHIncIRS), HHInc_IRS_sd = sd(HHIncIRS),
 #             MEDInc = mean(HHInc), MEDInc_sd = sd(HHInc)) %>% kable
 
+# ---- FIP Attributes -----------------------------------------------------
 # All
 fipdata %>%
   group_by(year) %>%
@@ -277,6 +284,7 @@ write.csv(pta, paste0(localDir, "/Fips_Stats.csv"), row.names = F)
 stargazer(pta, summary = F, rownames = F)
 
 
+# ---- FIP Attributes Graph -----------------------------------------------
 fipdata %>%
   filter(ipilot) %>%
   select(fips, year, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
@@ -294,12 +302,9 @@ fipdata %>%
 fipall4$class <- "No Loan"
 fipall <- bind_rows(fipall2, fipall3, fipall4)
 
-
 fipall$class <- factor(fipall$class, levels = c("No Loan", "Pilot", "Current"),
                        labels = c("None", "Pilot", "Current"))
 levels(fipall$key) <- c("Population", "Mean Income", "Mean Wages", "Providers")
-
-# facet_grid
 
 ggplot(fipall, aes(x = year, y = value, colour = class, group = class)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "smooth", size = 2) +
@@ -314,6 +319,65 @@ ggplot(fipall, aes(x = year, y = value, colour = class, group = class)) +
 ggsave(paste0(localDir, "/Fips_attributes.png"), width = 10, height = 7.5)
 
 
+# ---- RUC ----------------------------------------------------------------
+data$ruc    <- factor(data$ruc03)
+levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
+                         "nonadj" = c(5,7,9))
+data$loantype <- ifelse(data$iloans, "YES", "NONE")
+data$loantype <- ifelse(data$ipilot, "PILOT", data$loantype)
+data$loantype <- ifelse(data$ibip1234, "CURRENT", data$loantype)
+data$loantype <- factor(data$loantype)
+
+
+data %>% 
+  select(zip, time, ruc, loantype, Prov_num, fips) %>% 
+  gather(key, value, Prov_num) -> RUC
+
+RUC$zero <- ifelse(RUC$value == 0, 1, 0)
+
+
+# ---- RUC tables ---------------------------------------------------------
+
+RUC %>%
+  group_by(loantype, time) %>%
+  summarise(tots = format(sum(zero, na.rm = T), big.mark = ","),
+            per = sprintf("(%.1f%%)", 100*sum(zero, na.rm = T) / n())) %>% 
+  unite(temp, tots, per, sep = " ") %>% 
+  spread(loantype, temp) %>% 
+  knitr::kable(caption = "Zip Codes Without Access")
+
+# RUC %>%
+#   group_by(loantype, time) %>%
+#   summarise(value = sprintf("%.1f %%", 100*sum(zero, na.rm = T) / n())) %>% 
+#   spread(loantype, value) %>% 
+#   knitr::kable(caption = "Percent Zip Codes Without Access")
+# ----
+# RUC %>% 
+#   group_by(ruc) %>% 
+#   summarise(CURRENT = sprintf("%.1f %%", 100*sum(loantype == "CURRENT") / n()),
+#             NONE    = sprintf("%.1f %%", 100*sum(loantype == "NONE") / n()),
+#             PILOT   = sprintf("%.1f %%", 100*sum(loantype == "PILOT") / n())) %>% 
+#   knitr::kable(caption = "")
+
+RUC %>% 
+  group_by(loantype) %>% 
+  summarise(Metro = sprintf("%.1f %%", 100*sum(ruc == "metro") / n()),
+            `Rural Adjacent` = sprintf("%.1f %%", 100*sum(ruc == "adj") / n()),
+            `Rural Non-Adjacent` = sprintf("%.1f %%",
+                                           100*sum(ruc == "nonadj") / n())) %>% 
+  knitr::kable(caption = "County Class by Loan Type")
+
+# ---- RUC graph ----------------------------------------------------------
+
+ggplot(RUC, aes(x = time, y = value, colour = ruc, group = ruc)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "smooth") +
+  scale_y_continuous(labels = comma) +
+  guides(color = guide_legend(title = "County Class")) +
+  theme_minimal() + labs(x = "Number of Providers", y = "") +
+  theme(legend.position = "bottom",
+        strip.text.y = element_text(size = 10, face = "bold"))
+
+# ----
 rm(list=ls())
 
 print(paste0("Finished 2-USDA_Evaluation_Figures at ", Sys.time()))
