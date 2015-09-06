@@ -28,7 +28,7 @@ urls  <- paste0("http://www.census.gov/popest/data/counties/",
                 "asrh/1980s/tables/PE-02-", years, ".csv")
 files <- paste(data_source, basename(urls), sep = "/")
 if (all(sapply(files, function(x) !file.exists(x)))) {
-  mapply(download.file, url = urls, destfile = files, method = "libcurl")
+  mapply(download.file, url = urls, destfile = files)
 }
 
 vars <- c("year", "fips", "RaceSex", "Age1", "Age2", "Age3", "Age4", "Age5",
@@ -52,14 +52,14 @@ rm(data)
 url  <- paste0("http://www.census.gov/popest/data/",
                "intercensal/st-co/files/STCH-Intercensal_layout.txt")
 file <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 years <- as.character(1990:1999)
 urls  <- paste0("http://www.census.gov/popest/data/intercensal/",
                 "st-co/tables/STCH-Intercensal/STCH-icen", years, ".txt")
 files <- paste(data_source, basename(urls), sep = "/")
 if (all(sapply(files, function(x) !file.exists(x)))) {
-  mapply(download.file, url = urls, destfile = files, method = "libcurl")
+  mapply(download.file, url = urls, destfile = files)
 }
 
 pos <- fwf_widths(c(2, 7, 3, 2, 2, 7),
@@ -83,13 +83,13 @@ rm(data)
 url <- paste0("http://www.census.gov/popest/data/",
               "intercensal/county/files/CO-EST00INT-AGESEX-5YR.pdf")
 file     <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 ## data
 url <- paste0("http://www.census.gov/popest/data/",
               "intercensal/county/files/CO-EST00INT-AGESEX-5YR.csv")
 file     <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 data <- read_csv(file)
 data$fips <- 1000*data$STATE + data$COUNTY
@@ -112,13 +112,13 @@ rm(data)
 url <- paste0("http://www.census.gov/popest/data/",
               "counties/asrh/2014/files/CC-EST2014-ALLDATA.pdf")
 file     <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 ## data
 url <- paste0("http://www.census.gov/popest/data/",
               "counties/asrh/2014/files/CC-EST2014-ALLDATA.csv")
 file     <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 data <- read_csv(file)
 data$fips <- 1000*data$STATE + data$COUNTY
