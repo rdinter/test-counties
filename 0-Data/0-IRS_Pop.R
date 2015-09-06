@@ -14,7 +14,7 @@ data_source <- paste0(localDir, "/Raw")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
 
-tempDir  <- tempdir()
+tempDir  <- tempfile()
 unlink(tempDir, recursive = T)
 
 #####
@@ -27,7 +27,7 @@ years  <- 1989:2009
 urls   <- paste0(url, years, "countyincome.zip")
 files  <- paste(data_source, basename(urls), sep = "/")
 if (all(sapply(files, function(x) !file.exists(x)))) {
-  mapply(download.file, url = urls, destfile = files, method = "libcurl")
+  mapply(download.file, url = urls, destfile = files)
 }
 
 # Documentation changes in 1997...added "Gross rents" and "Total money income"
@@ -121,7 +121,7 @@ years  <- 2010:2012
 urls   <- paste0(url, years, "countydata.zip")
 files  <- paste(data_source, basename(urls), sep = "/")
 if (all(sapply(files, function(x) !file.exists(x)))) {
-  mapply(download.file, url = urls, destfile = files, method = "libcurl")
+  mapply(download.file, url = urls, destfile = files)
 }
 
 

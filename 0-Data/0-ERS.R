@@ -18,13 +18,14 @@ data_source <- paste0(localDir, "/Raw")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
 
-# Creative Class ----------------------------------------------------------
+
+# ---- Creative Class -----------------------------------------------------
 
 # http://www.ers.usda.gov/data-products/creative-class-county-codes.aspx
 url <- paste0("http://www.ers.usda.gov/datafiles/",
               "Creative_Class_County_Codes/creativeclass.xls")
 file <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 creative <- read_excel(file, skip = 2)
 names(creative)   <- gsub(" ", "", names(creative))
@@ -54,8 +55,8 @@ write_csv(creative, paste0(localDir, "/creative.csv"))
 save(creative, file = paste0(localDir, "/creative.Rda"))
 
 
-# Slow Moving or Non-changing ---------------------------------------------
 
+# ---- Slow ---------------------------------------------------------------
 
 ### Natural Amenities
 url  <- "http://www4.ncsu.edu/~rdinter/docs/natamen.csv"
@@ -79,7 +80,7 @@ save(nat, file = paste0(localDir, "/amenities.Rda"))
 url  <- paste0("http://www.ers.usda.gov/datafiles/",
                "RuralUrban_Continuum_Codes/ruralurbancodes2003.xls")
 file <- paste(data_source, basename(url), sep = "/")
-if (!file.exists(file)) download.file(url, file, method = "libcurl")
+if (!file.exists(file)) download.file(url, file)
 
 ruc1 <- read_excel(file)
 ruc1 %>% select(fips = `FIPS Code`, ruc93 = `1993 Rural-urban Continuum Code`,
@@ -104,8 +105,8 @@ ruc <- ruc %>%
 write_csv(ruc, paste0(localDir, "/rucontinuum.csv"))
 save(ruc, file = paste0(localDir, "/rucontinuum.Rda"))
 
-# Combine All -------------------------------------------------------------
 
+# ---- Combine All --------------------------------------------------------
 
 ERS <- full_join(creative, nat)
 ERS <- full_join(ERS, ruc)

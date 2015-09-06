@@ -1,8 +1,10 @@
-#Robert Dinterman, NCSU Economics PhD Student
+#Robert Dinterman
 
 # County Business Patterns
 # https://www.census.gov/econ/cbp/download/
 # BEWARE: From 1986 to 1997, classification uses SIC. 1998+ is NAICS
+
+# ---- Start --------------------------------------------------------------
 
 print(paste0("Started 0-CBP at ", Sys.time()))
 
@@ -29,7 +31,8 @@ urls <- paste0("https://www.census.gov/econ/cbp/download/",
 lapply(urls, function(x) bdown(url = x, folder = data_source))
 
 
-##### CBP Data from 1986 to 2001
+
+# ---- CBP Data from 1986 to 2001 -----------------------------------------
 years  <- c(as.character(86:99), "00", "01")
 url    <- "ftp://ftp.census.gov/Econ2001_And_Earlier/CBP_CSV/"
 urls   <- paste0(url, "cbp", years, "co.zip")
@@ -60,7 +63,8 @@ write_csv(cbp8601, path = paste0(localDir, "/CBP86-01.csv"))
 save(cbp8601, file = paste0(localDir, "/CBP86-01.Rda"))
 #rm(cbp8601)
 
-##### CBP Data from 2002 to 2013
+
+# ---- CBP Data from 2002 to 2013 -----------------------------------------
 years  <- as.character(2002:2013)
 url    <- "ftp://ftp.census.gov/econ"
 urls   <- paste0(url, years, "/CBP_CSV/cbp",
@@ -91,10 +95,11 @@ cbp0213 <- fipssues2(cbp0213, 51019, c(51019, 51515))
 write_csv(cbp0213, path = paste0(localDir, "/CBP02-13.csv"))
 save(cbp0213, file = paste0(localDir, "/CBP02-13.Rda"))
 
+
+# ---- Combine all the CBP data -------------------------------------------
 cbp <- bind_rows(cbp8601, cbp0213)
 rm(cbp8601, cbp0213)
 
-##### Combine all the CBP data
 write_csv(cbp, path = paste0(localDir, "/CBP86-13.csv"))
 save(cbp, file = paste0(localDir, "/CBP86-13.Rda"))
 
