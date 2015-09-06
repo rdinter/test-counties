@@ -3,6 +3,8 @@
 
 ## Organization:
 
+The main theme behind this repository is to have an easy to access data-source that can be easily accessed for multiple projects. The `Project` is the identifier for various ideas, research interests, modeling exercises, etc. As this becomes more populated with Projects, I will give a short description for each.
+
 * 0-Data/
     * `0-Data_Source.R` - script to download data and create `.csv` and `.Rda` files in an easy to read and uniform format.
     * Data_Source/ - most of this will be ignored via `.gitignore`.
@@ -22,17 +24,24 @@
     * Project/
         * Various plots, figures, tables, and maps saved. Not all are valuable or finished.
 * 3-Basic_Modeling/
-    * `3-Project_Basic.R` - basically OLS type of analysis to see what the data are doing.
+    * `3-Project_Basic_XXX.R` - basically OLS type of analysis to see what the data are doing.
     * Project/
         * Saved results, although some of these may never be of use for the final product.
 * 4-Advanced_Modeling/
-    * `4-Project_AdvancedXXX.R` - a more complex, and hopefully complete, way of modeling the data for the particular project.
+    * `4-Project_Advanced_XXX.R` - a more complex, and hopefully complete, way of modeling the data for the particular project.
     * Project/
         * Various ideas for solving the problem of interest.
 * 5-Results/
     * `5-Project_Results.R` - the output to be used for said project.
     * Project/
         * Finished results.
+
+## Projects
+At the moment, the following `Projects` within this repository are:
+
+1. `USDA_Evaluation` - 
+2. `Migration` - 
+3. `Breweries` - 
 
 ## Packages Needed
 Do need to install the [cleangeo](https://github.com/eblondel/cleangeo) package in order to correct for shapefile issues from [Emmanuel Blondel's Github](https://github.com/eblondel) with:
@@ -43,7 +52,7 @@ devtools::install_github("eblondel/cleangeo")
 library(cleangeo)
 ```
 
-Further, other packages needed include: `dplyr`, `ggplot2`, `maptools`, `raster`, `readr`, `readxl`, `rgdal`, `spdep`, `stringr`, `tidyr`.
+Further, other packages needed include: `dplyr`, `ggplot2`, `jsonlite`, `maptools`, `pbapply`, `raster`, `RCurl`, `readr`, `readxl`, `rgdal`, `spdep`, `stringr`, `tidyr`.
 
 
 <!--

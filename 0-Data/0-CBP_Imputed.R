@@ -39,7 +39,8 @@ cbpimpute <- cbpimpute %>% rowwise() %>%
 
 cbpall %>% filter(empflag == "") %>%
   bind_rows(cbpimpute) %>%
-  mutate(emp_ = ifelse(is.na(emp_), emp, emp_)) -> cbpimputed
+  mutate(emp_ = ifelse(is.na(emp_), emp, emp_)) -> cbpimpute
+
 # A 0-19
 # B 20-99
 # C 100-249
@@ -53,9 +54,22 @@ cbpall %>% filter(empflag == "") %>%
 # L 50,000-99,999
 # M 100,000 or More
 
+write_csv(cbpimpute, path = "0-Data/CBP/CBPimpute.csv")
+save(cbpimpute, file = "0-Data/CBP/CBPimpute.Rda")
 
-write_csv(cbpimputed, path = "0-Data/CBP/CBPimpute.csv")
-save(cbpimputed, file = "0-Data/CBP/CBPimpute.Rda")
+cbpfull <- expand.grid(fips = unique(cbpimpute$fips),
+                       year = unique(cbpimpute$year))
+cbpfull <- left_join(cbpfull, select(cbpimpute, fips, year, emp:year, emp_))
+
+library(zoo)
+cbpfull %>%
+  group_by(fips) %>% do(na.locf(.)) -> cbpfull
+cbpfull %>%
+  group_by(fips) %>%
+  do(na.locf(., fromLast = T)) -> cbpfull
+
+write_csv(cbpfull, path = "0-Data/CBP/CBPfull.csv")
+save(cbpfull, file = "0-Data/CBP/CBPfull.Rda")
 
 rm(list = ls())
 
