@@ -11,6 +11,13 @@ load("0-Data/CBP/CBP86-13.Rda") # 1986 to 2013 data
 
 cbpall <- filter(cbp, sic == "----" | naics == "------")
 
+# Missing fips: 51005 51019 51083 
+
+
+# Problem with FIPS that need to be condensed:
+# 51540 51570 51580 51590 51595 51600 51620 51640 51670 51678 
+# 51685 51690 51720 51730 51775 51790 
+
 test <- lm(emp ~ n1_4 + n5_9 + n10_19 + n20_49 + n50_99 + n100_249 + n250_499 +
              n500_999 + n1000_1 + n1000_2 + n1000_3 + n1000_4 - 1,
            filter(cbpall, empflag == ""))
@@ -37,7 +44,7 @@ cbpimpute <- cbpimpute %>% rowwise() %>%
          emp_ = ifelse(empflag == "L", max(min(emp_, 99999), 50000), emp_),
          emp_ = ifelse(empflag == "M", max(emp_, 100000), emp_))
 
-cbpall %>% filter(empflag == "") %>%
+cbpall %>% filter(empflag == "" | is.na(empflag)) %>%
   bind_rows(cbpimpute) %>%
   mutate(emp_ = ifelse(is.na(emp_), emp, emp_)) -> cbpimpute
 
