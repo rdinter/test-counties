@@ -187,13 +187,25 @@ data          <- left_join(data, coords)
 load("0-Data/ZBP/ZBPfull.Rda")
 
 zbp <- filter(zbpfull, year > 1998, year < 2009)
-rm(zbpimpute)
+rm(zbpfull)
 zbp %>% group_by(year) %>% summarise(n())
 
 zipfind(data$zip, zbp$zip)
 
 data <- inner_join(data, zbp)
 rm(zbp)
+
+load("0-Data/CBP/CBPfull.Rda")
+
+cbp <- cbpfull %>%
+  filter(year > 1998, year < 2009) %>%
+  rename(emp_fips = emp, qp1_fips = qp1, ap_fips = ap,
+         est_fips = est, emp_fips_ = emp_)
+rm(cbpfull)
+cbp %>% group_by(year) %>% summarise(n())
+
+data <- inner_join(data, cbp)
+rm(cbp)
 
 load("0-Data/Terrain/terrainzip.Rda")
 
