@@ -1,5 +1,7 @@
 # Robert Dinterman
 
+# ---- Start --------------------------------------------------------------
+
 print(paste0("Started 1-Migration_Tidy at ", Sys.time()))
 
 suppressMessages(library(dplyr))
@@ -15,8 +17,60 @@ load("0-Data/IRS/inflows9213.Rda")
 load("0-Data/IRS/outflows9213.Rda")
 load("0-Data/Shapefiles/All_2010_county.Rda")
 
+# ---- NEXT ---------------------------------------------------------------
 
 # Need to make sure to change the -1 to NA in the flows data ...
+
+allindata %>%
+  mutate(Return_Num_ = replace(Return_Num, Return_Num == -1 | is.na(Return_Num),
+                               NA),
+         Exmpt_Num_ = replace(Exmpt_Num, Exmpt_Num == -1 | is.na(Exmpt_Num),
+                              NA),
+         Aggr_AGI_ = replace(Aggr_AGI, Aggr_AGI == -1 | is.na(Aggr_AGI),
+                             NA),
+         STFIP_o = replace(State_Code_Origin, State_Code_Origin == 0, 96),
+         CTYFIP_o = replace(County_Code_Origin, State_Code_Origin == 0, 0),
+         
+         
+         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin %in% c(10, 20), 97),
+         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin %in% c(10, 20), 1),
+         
+         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin == 11, 59),
+         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin == 11, 1),
+         
+         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin == 12, 59),
+         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+                              County_Code_Origin == 12, 3),
+         
+         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin == 13, 59),
+         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+                              County_Code_Origin == 13, 5),
+         
+         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin == 14, 59),
+         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+                              County_Code_Origin == 14, 7),
+         
+         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+                             County_Code_Origin == 50, State_Code_Dest),
+         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+                              County_Code_Origin == 50, County_Code_Dest)
+         
+         ) -> allin
+
+alloutdata %>%
+  mutate(Return_Num_ = replace(Return_Num, Return_Num == -1 | is.na(Return_Num),
+                               NA),
+         Exmpt_Num_ = replace(Exmpt_Num, Exmpt_Num == -1 | is.na(Exmpt_Num),
+                              NA),
+         Aggr_AGI_ = replace(Aggr_AGI, Aggr_AGI == -1 | is.na(Aggr_AGI),
+                             NA)) -> allout
 
 # Next step is to fix any county issues ... new counties and merged counties!
 
