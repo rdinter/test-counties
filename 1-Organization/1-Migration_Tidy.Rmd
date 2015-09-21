@@ -49,13 +49,23 @@ allindata %>%
 flag %>% group_by(year) %>% summarise(Flagged = n(), HH = round(mean(Return_Num)), Pop = round(mean(Exmpt_Num)), AGI_Mean = round(mean(Aggr_AGI))) %>% kable
 ```
 
-The flagged values appear to be minimal. If using `AGI`, then it is best to remove these flagged values. However, the `Return_Num` and `Exmpt_Num` do not appear to suffer. Using this data for population migration would be considered appropriate. Correcting the `AGI` problem is left for future work.
+The flagged values appear to be minimal. If using `AGI`, then it is best to remove these flagged values. However, the `Return_Num` and `Exmpt_Num` do not appear to suffer. Using this data for population migration would be considered appropriate.
+
+Correcting the `AGI` problem is left for future work, although there are a few notes I can give from analyzing these data:
+
+1. Appears that the large negative values are clerical errors at the county level.
+2. IRS also maintains data on county income, which give total `AGI` for all of the county filers for a given year. So these two datasets are related, although the county income data also has a problem with implausibly large negative values.
+3. The `AGI` values for a county sum up. The migration data should match the income data, if not then this should be flagged.
+4. If clerical error is not at the summed level for County A (i.e. a county-to-county node is the flagged value), then one can use a constraint to back out the flagged value.
+5. If there are more than one flagged value for County A in a given year, then additional constraints are necessary. For County A, this implies there are flagged values to at least County B and County C (and potentially more). The first check should be to see the number of flagged values for County B, if there are no additional flagged values then this is identified. Continue to iterate through this process for additional flags.
+
+Correcting for these implausible numbers should be possible, however the benefit is low for this project. If income flows become a focal issue, then this will be picked up.
 
 ## Suppression Issues
 The IRS data are suppressed if there are fewer than 10 filers that migrate across regions. Sometimes these data are omitted completely while other times they are designated as suppressed with a `-1` value, although the `-1` distinction did not occur until 2004. To get an idea of how suppressed the data are, here is a quick table of suppressed values across years plus a column at the far side indicating the number of links containing the minimum number of filers (10):
 
 ```{r Suppressed}
-kable(allindata %>% group_by(year) %>% summarise(Suppressed = sum(Return_Num == -1 | is.na(Return_Num)), Total = n(), Pct_Suppressed = round(100*Suppressed / Total, digits = 2), Minimum = sum(Return_Num == 10 & !is.na(Return_Num)), Pct_Minimum = round(100*Minimum / Total, digits = 2)))
+kable(allindata %>% group_by(year) %>% summarise(Total = n(), Suppressed = sum(Return_Num == -1 | is.na(Return_Num)), Pct_Suppressed = round(100*Suppressed / Total, digits = 2), Minimum = sum(Return_Num == 10 & !is.na(Return_Num)), Pct_Minimum = round(100*Minimum / Total, digits = 2)))
 ```
 
 Suppression did not occur before 2004 although it is not clear what the reasoning behind this was. For data purposes, the best practice will be to change all values which are suppressed via the `-1` value to `NA` to delineate that we know there is a connection but do not know the specific value. This will also be helpful with the above AGI problem of large, unrealistic negative values which should be coded as missing values.
@@ -108,7 +118,7 @@ And the region codes for the associated `59` State FIPS are as follows:
 | | | Virginia (51-000) | |
 | | | West Virginia (54-000) | |
 
-A further note is that a county's non-migrant population is denoted by the FIPS codes being identical (the origin and destination are the same). But this is only for 2011 and beyond. Continuing to work backwards, documentation before 2005 does not exist, therefore one must manually go through the files to discern how the special flows are handled. In particular, we need to figure out the non-migrants and any special codes across state borders. From what I can tell, the above is consistent for all IRS data after 1995.
+A further note is that a county's non-migrant population is denoted by the FIPS codes being identical (the origin and destination are the same). Continuing to work backwards, documentation before 2005 does not exist, therefore one must manually go through the files to discern how the special flows are handled. In particular, we need to figure out the non-migrants and any special codes across state borders. From what I can tell, the above is consistent for all IRS data after 1995.
 
 A first pass is to do a quick cross-tabulation of the special codes across years. This involves subsetting the data to use `State_Code_Origin` values which are not equal to the FIPS codes of US States. The following chart's rows indicate the `State_Code_Origin` across the columns of `year` where the value in each cell is the total count of that particular `State_Code_Origin`:
 
@@ -116,7 +126,7 @@ A first pass is to do a quick cross-tabulation of the special codes across years
 kable(xtabs(~State_Code_Origin + year, filter(allindata, State_Code_Origin > 56 | State_Code_Origin == 0)))
 ```
 
-Excellent, we can see a clear demarcation where before 1995 the special codes appear to be designated with `0` and `63`. Afterwards, it appears the special codes are as documented above except with three other clear changes in data patterns:
+Excellent. We can see a clear demarcation where, before 1995, the special codes appear to be designated with `0` and `63`. Afterwards, it appears the special codes are as documented above except with three other clear changes in data patterns:
 
 * In 2003, total values for the `98` FIPS (Total Foreign migration) were `r sum(filter(allindata, year == 2003)$State_Code_Origin == 98)` but then increased sharply to `r sum(filter(allindata, year == 2004)$State_Code_Origin == 98)` in 2004. This change likely demonstrates that the IRS now filled in a value of 0 (or suppressed) across all counties from 2004 and beyond where before the IRS would omit a value for the county if no (or suppressed) migration with foreign areas occurred.
 
@@ -127,10 +137,10 @@ Excellent, we can see a clear demarcation where before 1995 the special codes ap
 The necessary corrections for handling data before 1995 involve changing the special FIPS codes involving `0` (which represent total migrants) and `63` which are more complicated:
 
 ```{r Pre1995}
-kable(xtabs(~County_Name + County_Code_Origin, filter(allindata, State_Code_Origin == 63, year < 1995)))
+kable(xtabs(~County_Name + County_Code_Origin, filter(allindata, State_Code_Origin == 63, year < 1995)), caption = "Pre 1995 Special Codes")
 ```
 
-The biggest change is that we need to have consistent measures of Total-Migrants and Non-Migrants while I will choose to ignore all categories which can be calculated from other values (i.e. movement within state, movement within region, etc.). All ST `63` and CTY `50` values need to be converted to the respective home region. The ST `63` and CTY `15` is loosely classified as Foreign with around 200 observations each year with an average of `r mean(filter(allindata, State_Code_Origin == 63, County_Code_Origin == 15)$Return_Num)` returns per observation. This indicates that the `63` "Foreign" is not likely to be movement to designated Foreign areas but rather observations that the IRS did not know what to do with and matches up well with a category called "Foreign - Other Flows."
+The biggest change is that we need to have consistent measures of Total-Migrants and Non-Migrants. I will choose to ignore all categories which can be calculated from other values (i.e. movement within state, movement within region, etc.). All ST `63` and CTY `50` values need to be converted to the respective home region. The ST `63` and CTY `15` is loosely classified as Foreign with around 200 observations each year with an average of `r mean(filter(allindata, State_Code_Origin == 63, County_Code_Origin == 15)$Return_Num)` returns per observation. This indicates that the `63` "Foreign" is not likely to be movement to designated Foreign areas but rather observations that the IRS did not know what to do with and matches up well with a category called "Foreign - Other Flows."
 
 We also have ST `57` as a Foreign category that we need to inspect. Here is a chart with the row as the `County_Code_Origin` based upon being in the Foreign (`57`) category across all years:
 
@@ -152,13 +162,13 @@ The following are the equivalent changes to the pre-1995 data to best sync up da
 |:-----------------------------------|------------|-------------|-------------:|
 | **Non-Migrant (identical FIPS)**   | **NA**     | **NA**      | **ST `63` + `50` to ST \& CTY of interest** |
 |**Total Migration – US and Foreign**| **96**     | **000**     | **ST `0` + CTY `1` to `96` + `0`** |
-| **Total Migration – Foreign**      | **98**     | **000**     | **NewVariable: SUM all `57` flows** |
+| **Total Migration – Foreign**      | **98**     | **000**     | **New Variable: SUM all `57` flows** |
 | **Foreign - Overseas**             | **57**     | **001**     | **Same.** |
 | **Foreign - Puerto Rico**          | **57**     | **003**     | **Same.** |
 | **Foreign - APO/FPO ZIPs**         | **57**     | **005**     | **Same.** |
 | **Foreign - Virgin Islands, U.S**  | **57**     | **007**     | **Same.** |
 | **Foreign - Other flows (FR)**     | **57**     | **009**     | **ST `63` + `15`** |
-| **Total Migration – US**          | **97**     | **000**     | **New variable (for pre-2004): `97` + `0` = `96000` minus `98000`** |
+| **Total Migration – US**          | **97**     | **000**     | **New variable: `97` + `0` = `96000` minus `98000`** |
 | Other Flows - Same State (SS)     | 58         | 000         | ST `63` + CTY `10` \& `20` |
 | Other Flows - Different State (DS)| 59         | 000         | ST `63` + CTY `21` \& `22` |
 | Other Flows - Northeast (DS)      | 59         | 001         | ST `63` + `11` |
@@ -168,7 +178,10 @@ The following are the equivalent changes to the pre-1995 data to best sync up da
 | Total Migration – Same State      | 97         | 001         | New Variable: Sum across ST `XX` less its own + `58000` |
 | Total Migration – Different State | 97         | 003         | New Variable: `97000` minus `97001` |
 
-For the purposes of this project, I do not have a substantial reason to have observations based upon different states or regions. The `97001`, `97003`, and all ST `58` and `59` are not important to me.
+For the purposes of this project, I do not have a substantial reason to have observations based upon different states or regions. The `97001`, `97003`, and all ST `58` and `59` are not important to me. Future research may dictate that I need to go back and calculate these values, but for the present time there are two structures that I need to calculate:
+
+1. County Level statistics by year: Total In-migration, Total Out-migration, and Total Non-migrants. From those values, we can construct net-migration, total population (of filers), migration rates, etc. These are the typical variables in a migration study.
+2. County-to-county: two separate dataframes which only contain the pairs between counties (the IN file and OUT file). Next, diagnostic checks are to be performed to ensure that `Return_num` and `Exmpt_num` are closely related. If given a year, these two values match for the IN and OUT then these values are OK. If different, or if one contains a value while the other does not, then there is a problem. Easiest solution is to simply average the two then move on, but if there are large differences then these values need to be flagged and checked. This data will contain the flow from County A to County B of households, people, and income (but not likely to be used).
 
 ## State Level Migration
 Starting in 1995, the IRS data also provides summaries for the flows between a state and a county with a given `000` for County Code:

@@ -19,8 +19,9 @@ load("0-Data/Shapefiles/All_2010_county.Rda")
 
 # ---- NEXT ---------------------------------------------------------------
 
-# Need to make sure to change the -1 to NA in the flows data ...
-
+# Need to make sure to change the -1 to NA in the flows data, then change
+#  classification of values
+nonmig <- allindata$State_Code_Origin == 63 & allindata$County_Code_Origin == 50
 allindata %>%
   mutate(Return_Num_ = replace(Return_Num, Return_Num == -1 | is.na(Return_Num),
                                NA),
@@ -28,41 +29,70 @@ allindata %>%
                               NA),
          Aggr_AGI_ = replace(Aggr_AGI, Aggr_AGI == -1 | is.na(Aggr_AGI),
                              NA),
-         STFIP_o = replace(State_Code_Origin, State_Code_Origin == 0, 96),
-         CTYFIP_o = replace(County_Code_Origin, State_Code_Origin == 0, 0),
+         # Total Migration
+         County_Code_Origin = replace(County_Code_Origin,
+                                      State_Code_Origin == 0, 0),
+         State_Code_Origin = replace(State_Code_Origin,
+                                     State_Code_Origin == 0, 96),
          
+         # Non-migrants
+         State_Code_Origin = replace(State_Code_Origin, nonmig,
+                                     State_Code_Dest[nonmig]),
+         County_Code_Origin = replace(County_Code_Origin, nonmig,
+                                      County_Code_Dest[nonmig]),
          
-         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
-                             County_Code_Origin %in% c(10, 20), 97),
-         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
-                             County_Code_Origin %in% c(10, 20), 1),
-         
-         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+         # Same State
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
+                             County_Code_Origin %in% c(10, 20), 58),
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
+                             County_Code_Origin %in% c(10, 20), 0),
+         # Different State
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
+                             County_Code_Origin %in% c(10, 20), 59),
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
+                              County_Code_Origin %in% c(10, 20), 0),
+         # Northeast
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
                              County_Code_Origin == 11, 59),
-         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
                              County_Code_Origin == 11, 1),
-         
-         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+         # Midwest
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
                              County_Code_Origin == 12, 59),
-         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
                               County_Code_Origin == 12, 3),
-         
-         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+         # South
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
                              County_Code_Origin == 13, 59),
-         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
                               County_Code_Origin == 13, 5),
-         
-         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
+         # West
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
                              County_Code_Origin == 14, 59),
-         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
                               County_Code_Origin == 14, 7),
-         
-         STFIP_o = replace(STFIP_o, State_Code_Origin == 63 &
-                             County_Code_Origin == 50, State_Code_Dest),
-         CTYFIP_o = replace(CTYFIP_o, State_Code_Origin == 63 &
-                              County_Code_Origin == 50, County_Code_Dest)
-         
+         # Foreign Other
+         State_Code_Origin = replace(State_Code_Origin, State_Code_Origin == 63 &
+                             County_Code_Origin == 15, 57),
+         County_Code_Origin = replace(County_Code_Origin, State_Code_Origin == 63 &
+                              County_Code_Origin == 15, 9)
          ) -> allin
+# Next, need to add in summed foreign values
+allin %>% 
+  filter(State_Code_Origin == 57, year < 1995) %>% 
+  group_by(year, State_Code_Dest, County_Code_Dest) %>% 
+  summarise_each(funs(sum), Return_Num:Aggr_AGI, Return_Num_:Aggr_AGI_) -> temp
+temp$State_Code_Origin  <- 98
+temp$County_Code_Origin <- 0
+allin <- bind_rows(allin, temp)
+
+# # Finally, we need the US values of 97000 
+# allin %>% 
+#   filter(State_Code_Origin %in% c(96, 98) |
+#            (State_Code_Origin == 97 & County_Code_Origin == 0)) %>% 
+#   group_by(year, State_Code_Dest, County_Code_Dest) %>%
+#   summarise(n = n()) -> j5
+
 
 alloutdata %>%
   mutate(Return_Num_ = replace(Return_Num, Return_Num == -1 | is.na(Return_Num),
