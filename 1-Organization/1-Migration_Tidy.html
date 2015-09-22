@@ -10,7 +10,7 @@
 
 <meta name="author" content="Robert Dinterman" />
 
-<meta name="date" content="2015-09-15" />
+<meta name="date" content="2015-09-21" />
 
 <title>1-Migration Tidy</title>
 
@@ -64,7 +64,7 @@ img {
 <div id="header">
 <h1 class="title">1-Migration Tidy</h1>
 <h4 class="author"><em>Robert Dinterman</em></h4>
-<h4 class="date"><em>2015-09-15</em></h4>
+<h4 class="date"><em>2015-09-21</em></h4>
 </div>
 
 
@@ -95,7 +95,7 @@ img {
 <tbody>
 <tr class="odd">
 <td align="left">XX</td>
-<td align="left">Same State</td>
+<td align="left">SAME STATE</td>
 <td align="right">71</td>
 <td align="right">164</td>
 <td align="right">-998560</td>
@@ -104,8 +104,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="even">
-<td align="left">Va</td>
-<td align="left">Fairfax</td>
+<td align="left">VA</td>
+<td align="left">FAIRFAX</td>
 <td align="right">97</td>
 <td align="right">195</td>
 <td align="right">-995284</td>
@@ -114,8 +114,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="odd">
-<td align="left">Tx</td>
-<td align="left">Bell</td>
+<td align="left">TX</td>
+<td align="left">BELL</td>
 <td align="right">263</td>
 <td align="right">546</td>
 <td align="right">-994258</td>
@@ -124,8 +124,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="even">
-<td align="left">Ky</td>
-<td align="left">Lincoln</td>
+<td align="left">KY</td>
+<td align="left">LINCOLN</td>
 <td align="right">475</td>
 <td align="right">1132</td>
 <td align="right">-990239</td>
@@ -134,8 +134,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="odd">
-<td align="left">Wa</td>
-<td align="left">King</td>
+<td align="left">WA</td>
+<td align="left">KING</td>
 <td align="right">519</td>
 <td align="right">976</td>
 <td align="right">-979406</td>
@@ -162,7 +162,7 @@ img {
 <tbody>
 <tr class="odd">
 <td align="left">XX</td>
-<td align="left">Same State</td>
+<td align="left">SAME STATE</td>
 <td align="right">53</td>
 <td align="right">129</td>
 <td align="right">-999190</td>
@@ -171,8 +171,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="even">
-<td align="left">Ky</td>
-<td align="left">Adair</td>
+<td align="left">KY</td>
+<td align="left">ADAIR</td>
 <td align="right">206</td>
 <td align="right">425</td>
 <td align="right">-996416</td>
@@ -181,8 +181,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="odd">
-<td align="left">Va</td>
-<td align="left">Fredericksburg city</td>
+<td align="left">VA</td>
+<td align="left">FREDERICKSBURG CITY</td>
 <td align="right">97</td>
 <td align="right">195</td>
 <td align="right">-995284</td>
@@ -191,8 +191,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="even">
-<td align="left">Tx</td>
-<td align="left">Harris</td>
+<td align="left">TX</td>
+<td align="left">HARRIS</td>
 <td align="right">263</td>
 <td align="right">546</td>
 <td align="right">-994258</td>
@@ -201,8 +201,8 @@ img {
 <td align="right">1994</td>
 </tr>
 <tr class="odd">
-<td align="left">Wa</td>
-<td align="left">Clark</td>
+<td align="left">WA</td>
+<td align="left">CLARK</td>
 <td align="right">519</td>
 <td align="right">976</td>
 <td align="right">-979406</td>
@@ -377,7 +377,16 @@ img {
 </tr>
 </tbody>
 </table>
-<p>The flagged values appear to be minimal. If using <code>AGI</code>, then it is best to remove these flagged values. However, the <code>Return_Num</code> and <code>Exmpt_Num</code> do not appear to suffer. Using this data for population migration would be considered appropriate. Correcting the <code>AGI</code> problem is left for future work.</p>
+<p>The flagged values appear to be minimal. If using <code>AGI</code>, then it is best to remove these flagged values. However, the <code>Return_Num</code> and <code>Exmpt_Num</code> do not appear to suffer. Using this data for population migration would be considered appropriate.</p>
+<p>Correcting the <code>AGI</code> problem is left for future work, although there are a few notes I can give from analyzing these data:</p>
+<ol style="list-style-type: decimal">
+<li>Appears that the large negative values are clerical errors at the county level.</li>
+<li>IRS also maintains data on county income, which give total <code>AGI</code> for all of the county filers for a given year. So these two datasets are related, although the county income data also has a problem with implausibly large negative values.</li>
+<li>The <code>AGI</code> values for a county sum up. The migration data should match the income data, if not then this should be flagged.</li>
+<li>If clerical error is not at the summed level for County A (i.e. a county-to-county node is the flagged value), then one can use a constraint to back out the flagged value.</li>
+<li>If there are more than one flagged value for County A in a given year, then additional constraints are necessary. For County A, this implies there are flagged values to at least County B and County C (and potentially more). The first check should be to see the number of flagged values for County B, if there are no additional flagged values then this is identified. Continue to iterate through this process for additional flags.</li>
+</ol>
+<p>Correcting for these implausible numbers should be possible, however the benefit is low for this project. If income flows become a focal issue, then this will be picked up.</p>
 </div>
 <div id="suppression-issues" class="section level2">
 <h2>Suppression Issues</h2>
@@ -386,8 +395,8 @@ img {
 <thead>
 <tr class="header">
 <th align="right">year</th>
-<th align="right">Suppressed</th>
 <th align="right">Total</th>
+<th align="right">Suppressed</th>
 <th align="right">Pct_Suppressed</th>
 <th align="right">Minimum</th>
 <th align="right">Pct_Minimum</th>
@@ -396,168 +405,168 @@ img {
 <tbody>
 <tr class="odd">
 <td align="right">1992</td>
-<td align="right">23</td>
 <td align="right">97149</td>
+<td align="right">23</td>
 <td align="right">0.02</td>
 <td align="right">6931</td>
 <td align="right">7.13</td>
 </tr>
 <tr class="even">
 <td align="right">1993</td>
-<td align="right">0</td>
 <td align="right">96746</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">6853</td>
 <td align="right">7.08</td>
 </tr>
 <tr class="odd">
 <td align="right">1994</td>
-<td align="right">7</td>
 <td align="right">98751</td>
+<td align="right">7</td>
 <td align="right">0.01</td>
 <td align="right">6915</td>
 <td align="right">7.00</td>
 </tr>
 <tr class="even">
 <td align="right">1995</td>
-<td align="right">6</td>
 <td align="right">106981</td>
+<td align="right">6</td>
 <td align="right">0.01</td>
 <td align="right">6817</td>
 <td align="right">6.37</td>
 </tr>
 <tr class="odd">
 <td align="right">1996</td>
+<td align="right">108734</td>
 <td align="right">2</td>
-<td align="right">108739</td>
 <td align="right">0.00</td>
 <td align="right">6878</td>
 <td align="right">6.33</td>
 </tr>
 <tr class="even">
 <td align="right">1997</td>
-<td align="right">1</td>
 <td align="right">109319</td>
+<td align="right">1</td>
 <td align="right">0.00</td>
 <td align="right">6946</td>
 <td align="right">6.35</td>
 </tr>
 <tr class="odd">
 <td align="right">1998</td>
-<td align="right">0</td>
 <td align="right">110555</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">7177</td>
 <td align="right">6.49</td>
 </tr>
 <tr class="even">
 <td align="right">1999</td>
-<td align="right">0</td>
 <td align="right">111201</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">7109</td>
 <td align="right">6.39</td>
 </tr>
 <tr class="odd">
 <td align="right">2000</td>
-<td align="right">0</td>
 <td align="right">111807</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">7017</td>
 <td align="right">6.28</td>
 </tr>
 <tr class="even">
 <td align="right">2001</td>
-<td align="right">0</td>
 <td align="right">111581</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">7135</td>
 <td align="right">6.39</td>
 </tr>
 <tr class="odd">
 <td align="right">2002</td>
-<td align="right">0</td>
 <td align="right">109620</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">6918</td>
 <td align="right">6.31</td>
 </tr>
 <tr class="even">
 <td align="right">2003</td>
-<td align="right">0</td>
 <td align="right">109820</td>
+<td align="right">0</td>
 <td align="right">0.00</td>
 <td align="right">6890</td>
 <td align="right">6.27</td>
 </tr>
 <tr class="odd">
 <td align="right">2004</td>
-<td align="right">2278</td>
 <td align="right">114534</td>
+<td align="right">2278</td>
 <td align="right">1.99</td>
 <td align="right">7135</td>
 <td align="right">6.23</td>
 </tr>
 <tr class="even">
 <td align="right">2005</td>
-<td align="right">2276</td>
 <td align="right">118389</td>
+<td align="right">2276</td>
 <td align="right">1.92</td>
 <td align="right">7437</td>
 <td align="right">6.28</td>
 </tr>
 <tr class="odd">
 <td align="right">2006</td>
-<td align="right">2288</td>
 <td align="right">116627</td>
+<td align="right">2288</td>
 <td align="right">1.96</td>
 <td align="right">7223</td>
 <td align="right">6.19</td>
 </tr>
 <tr class="even">
 <td align="right">2007</td>
-<td align="right">2256</td>
 <td align="right">118691</td>
+<td align="right">2256</td>
 <td align="right">1.90</td>
 <td align="right">7495</td>
 <td align="right">6.31</td>
 </tr>
 <tr class="odd">
 <td align="right">2008</td>
-<td align="right">2331</td>
 <td align="right">116059</td>
+<td align="right">2331</td>
 <td align="right">2.01</td>
 <td align="right">7310</td>
 <td align="right">6.30</td>
 </tr>
 <tr class="even">
 <td align="right">2009</td>
-<td align="right">2549</td>
 <td align="right">110651</td>
+<td align="right">2549</td>
 <td align="right">2.30</td>
 <td align="right">6778</td>
 <td align="right">6.13</td>
 </tr>
 <tr class="odd">
 <td align="right">2010</td>
-<td align="right">2525</td>
 <td align="right">113593</td>
+<td align="right">2525</td>
 <td align="right">2.22</td>
 <td align="right">7035</td>
 <td align="right">6.19</td>
 </tr>
 <tr class="even">
 <td align="right">2011</td>
-<td align="right">6433</td>
 <td align="right">130101</td>
+<td align="right">6433</td>
 <td align="right">4.94</td>
 <td align="right">7898</td>
 <td align="right">6.07</td>
 </tr>
 <tr class="odd">
 <td align="right">2012</td>
-<td align="right">6373</td>
 <td align="right">131931</td>
+<td align="right">6373</td>
 <td align="right">4.83</td>
 <td align="right">8022</td>
 <td align="right">6.08</td>
@@ -794,7 +803,7 @@ img {
 </tr>
 </tbody>
 </table>
-<p>A further note is that a county’s non-migrant population is denoted by the FIPS codes being identical (the origin and destination are the same). But this is only for 2011 and beyond. Continuing to work backwards, documentation before 2005 does not exist, therefore one must manually go through the files to discern how the special flows are handled. In particular, we need to figure out the non-migrants and any special codes across state borders. From what I can tell, the above is consistent for all IRS data after 1995.</p>
+<p>A further note is that a county’s non-migrant population is denoted by the FIPS codes being identical (the origin and destination are the same). Continuing to work backwards, documentation before 2005 does not exist, therefore one must manually go through the files to discern how the special flows are handled. In particular, we need to figure out the non-migrants and any special codes across state borders. From what I can tell, the above is consistent for all IRS data after 1995.</p>
 <p>A first pass is to do a quick cross-tabulation of the special codes across years. This involves subsetting the data to use <code>State_Code_Origin</code> values which are not equal to the FIPS codes of US States. The following chart’s rows indicate the <code>State_Code_Origin</code> across the columns of <code>year</code> where the value in each cell is the total count of that particular <code>State_Code_Origin</code>:</p>
 <table>
 <thead>
@@ -950,7 +959,7 @@ img {
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">3180</td>
-<td align="right">3181</td>
+<td align="right">3180</td>
 <td align="right">3183</td>
 <td align="right">3186</td>
 <td align="right">3182</td>
@@ -974,7 +983,7 @@ img {
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">9460</td>
-<td align="right">9436</td>
+<td align="right">9433</td>
 <td align="right">9441</td>
 <td align="right">9442</td>
 <td align="right">9440</td>
@@ -998,7 +1007,7 @@ img {
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">1089</td>
-<td align="right">1056</td>
+<td align="right">1055</td>
 <td align="right">1049</td>
 <td align="right">1057</td>
 <td align="right">1055</td>
@@ -1018,7 +1027,7 @@ img {
 </tr>
 </tbody>
 </table>
-<p>Excellent, we can see a clear demarcation where before 1995 the special codes appear to be designated with <code>0</code> and <code>63</code>. Afterwards, it appears the special codes are as documented above except with three other clear changes in data patterns:</p>
+<p>Excellent. We can see a clear demarcation where, before 1995, the special codes appear to be designated with <code>0</code> and <code>63</code>. Afterwards, it appears the special codes are as documented above except with three other clear changes in data patterns:</p>
 <ul>
 <li><p>In 2003, total values for the <code>98</code> FIPS (Total Foreign migration) were 1073 but then increased sharply to 3193 in 2004. This change likely demonstrates that the IRS now filled in a value of 0 (or suppressed) across all counties from 2004 and beyond where before the IRS would omit a value for the county if no (or suppressed) migration with foreign areas occurred.</p></li>
 <li><p>In 2010, total values for the <code>57</code> FIPS (Foreign flows) were 1211 but then increased to 3590 for 2011. I suspect the same implementation occurred as above: the IRS now replaces values with 0 (or suppressed) when before they may have simply omitted any value. This can be seen with the <code>98</code> FIPS (Total - Foreign) which changed from 3197 to 2514 across the same time.</p></li>
@@ -1026,6 +1035,7 @@ img {
 </ul>
 <p>The necessary corrections for handling data before 1995 involve changing the special FIPS codes involving <code>0</code> (which represent total migrants) and <code>63</code> which are more complicated:</p>
 <table>
+<caption>Pre 1995 Special Codes</caption>
 <thead>
 <tr class="header">
 <th align="left"></th>
@@ -1044,7 +1054,7 @@ img {
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">County Non-Migrant</td>
+<td align="left">COUNTY NON-MIGRANT</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1058,7 +1068,7 @@ img {
 <td align="right">9417</td>
 </tr>
 <tr class="even">
-<td align="left">Different Region</td>
+<td align="left">DIFFERENT REGION</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1072,7 +1082,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="left">Foreign</td>
+<td align="left">FOREIGN</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1086,7 +1096,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="left">Region 1: Northeast</td>
+<td align="left">REGION 1: NORTHEAST</td>
 <td align="right">0</td>
 <td align="right">5172</td>
 <td align="right">0</td>
@@ -1100,7 +1110,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="left">Region 2: Midwest</td>
+<td align="left">REGION 2: MIDWEST</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">5197</td>
@@ -1114,7 +1124,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="left">Region 3: South</td>
+<td align="left">REGION 3: SOUTH</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1128,7 +1138,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="left">Region 4: West</td>
+<td align="left">REGION 4: WEST</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1142,7 +1152,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="left">Same Region, Diff. State</td>
+<td align="left">SAME REGION, DIFF. STATE</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1156,7 +1166,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="left">Same State</td>
+<td align="left">SAME STATE</td>
 <td align="right">5090</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1170,7 +1180,7 @@ img {
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="left">Suppress All Flows</td>
+<td align="left">SUPPRESS ALL FLOWS</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1185,7 +1195,7 @@ img {
 </tr>
 </tbody>
 </table>
-<p>The biggest change is that we need to have consistent measures of Total-Migrants and Non-Migrants while I will choose to ignore all categories which can be calculated from other values (i.e. movement within state, movement within region, etc.). All ST <code>63</code> and CTY <code>50</code> values need to be converted to the respective home region. The ST <code>63</code> and CTY <code>15</code> is loosely classified as Foreign with around 200 observations each year with an average of 11.9787611 returns per observation. This indicates that the <code>63</code> “Foreign” is not likely to be movement to designated Foreign areas but rather observations that the IRS did not know what to do with and matches up well with a category called “Foreign - Other Flows.”</p>
+<p>The biggest change is that we need to have consistent measures of Total-Migrants and Non-Migrants. I will choose to ignore all categories which can be calculated from other values (i.e. movement within state, movement within region, etc.). All ST <code>63</code> and CTY <code>50</code> values need to be converted to the respective home region. The ST <code>63</code> and CTY <code>15</code> is loosely classified as Foreign with around 200 observations each year with an average of 11.9787611 returns per observation. This indicates that the <code>63</code> “Foreign” is not likely to be movement to designated Foreign areas but rather observations that the IRS did not know what to do with and matches up well with a category called “Foreign - Other Flows.”</p>
 <p>We also have ST <code>57</code> as a Foreign category that we need to inspect. Here is a chart with the row as the <code>County_Code_Origin</code> based upon being in the Foreign (<code>57</code>) category across all years:</p>
 <table>
 <thead>
@@ -1370,7 +1380,7 @@ img {
 <td align="left"><strong>Total Migration – Foreign</strong></td>
 <td align="left"><strong>98</strong></td>
 <td align="left"><strong>000</strong></td>
-<td align="right"><strong>NewVariable: SUM all <code>57</code> flows</strong></td>
+<td align="right"><strong>New Variable: SUM all <code>57</code> flows</strong></td>
 </tr>
 <tr class="even">
 <td align="left"><strong>Foreign - Overseas</strong></td>
@@ -1406,7 +1416,7 @@ img {
 <td align="left"><strong>Total Migration – US</strong></td>
 <td align="left"><strong>97</strong></td>
 <td align="left"><strong>000</strong></td>
-<td align="right"><strong>New variable (for pre-2004): <code>97</code> + <code>0</code> = <code>96000</code> minus <code>98000</code></strong></td>
+<td align="right"><strong>New variable: <code>97</code> + <code>0</code> = <code>96000</code> minus <code>98000</code></strong></td>
 </tr>
 <tr class="even">
 <td align="left">Other Flows - Same State (SS)</td>
@@ -1458,7 +1468,11 @@ img {
 </tr>
 </tbody>
 </table>
-<p>For the purposes of this project, I do not have a substantial reason to have observations based upon different states or regions. The <code>97001</code>, <code>97003</code>, and all ST <code>58</code> and <code>59</code> are not important to me.</p>
+<p>For the purposes of this project, I do not have a substantial reason to have observations based upon different states or regions. The <code>97001</code>, <code>97003</code>, and all ST <code>58</code> and <code>59</code> are not important to me. Future research may dictate that I need to go back and calculate these values, but for the present time there are two structures that I need to calculate:</p>
+<ol style="list-style-type: decimal">
+<li>County Level statistics by year: Total In-migration, Total Out-migration, and Total Non-migrants. From those values, we can construct net-migration, total population (of filers), migration rates, etc. These are the typical variables in a migration study.</li>
+<li>County-to-county: two separate dataframes which only contain the pairs between counties (the IN file and OUT file). Next, diagnostic checks are to be performed to ensure that <code>Return_num</code> and <code>Exmpt_num</code> are closely related. If given a year, these two values match for the IN and OUT then these values are OK. If different, or if one contains a value while the other does not, then there is a problem. Easiest solution is to simply average the two then move on, but if there are large differences then these values need to be flagged and checked. This data will contain the flow from County A to County B of households, people, and income (but not likely to be used).</li>
+</ol>
 </div>
 <div id="state-level-migration" class="section level2">
 <h2>State Level Migration</h2>
@@ -1477,7 +1491,7 @@ img {
 </tr>
 <tr class="even">
 <td align="right">1996</td>
-<td align="right">13569</td>
+<td align="right">13566</td>
 </tr>
 <tr class="odd">
 <td align="right">1997</td>

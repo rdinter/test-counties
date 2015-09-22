@@ -125,8 +125,8 @@ for (i in files){
   print(paste0("Finished ", basename(i), " at ", Sys.time()))
 }
 # Problem in 1996 where the indata for total US is coded as 1 instead of 0
-allindata$State_Code_Dest <- replace(allindata$State_Code_Dest,
-                                     allindata$State_Abbrv == "US", 0)
+allindata <- filter(allindata, !(State_Code_Dest == 1 & State_Abbrv == "US"))
+
 write_csv(allindata, paste0(localDir, "/inflows9203.csv"))
 write_csv(alloutdata, paste0(localDir, "/outflows9203.csv"))
 
