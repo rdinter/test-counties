@@ -166,7 +166,7 @@ outflows <- c("countyoutflow0405.csv", "countyoutflow0506.csv",
               "countyoutflow0809.csv", "countyoutflow0910.csv",
               "countyoutflow1011.csv", "countyoutflow1112.csv",
               "countyoutflow1213.csv")
-outdata  <- sapply(inflows, function(x){
+outdata  <- sapply(outflows, function(x){
   file       <- paste0(data_source, "/", x)
   if (!file.exists(file)) (download.file(paste0(url, x), file))
   data       <- read_csv(file, col_names = c("State_Code_Origin",
