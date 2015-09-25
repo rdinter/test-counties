@@ -14,6 +14,10 @@ if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
 
+data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
+data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
+
+
 data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
 data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
 data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
@@ -28,7 +32,8 @@ data %>%
   group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
   dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
          logINC, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
-         loans, ploans, biploans1234, iloans, ipilot, icur, long, lat) %>%
+         Prov_alt, loans, ploans, biploans1234, iloans, ipilot, icur,
+         long, lat) %>%
   summarise_each(funs(mean)) -> pdata
 
 # pdata <- pdata.frame(pdata, index = c("zip", "year"))

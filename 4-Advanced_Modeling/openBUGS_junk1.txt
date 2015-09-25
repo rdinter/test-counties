@@ -1,0 +1,14 @@
+for (i in 1 : N) {
+  y[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
+  log(mu[i]) <- log(e[i])+alpha+phi[i]+nu[i] # model for Poisson mean
+  phi[i] ~ dnorm(0, tau.phi) # normal prior for spatially unstructured effects
+  rho[i] <- exp(alpha+phi[i]+nu[i]) # R Risks compared to reference rate
+  rholocal[i] <- exp(phi[i]+nu[i]) # R Risks compared to overall risk in study area
+  Phigh[i] <- step(rholocal[i] - 1.5) # Prob that local rholocal[i] > 1.5 (note how easy this is!)
+}
+nu[1:N] ~ car.normal(adj[],weights[],num[],tau.nu) #CAR prior for spatially structured effects
+alpha ~ dflat() # uniform prior for mean log relative risk
+tau.phi ~ dgamma(0.5, 0.0005) # diffuse gamma hyperprior for tau.phi
+tau.nu ~ dgamma(0.5, 0.0005) # diffuse gamma hyperprior for tau.nu
+sigma.phi <- sqrt(1/tau.phi) # st dev of prior for spatially unstructured effects
+sigma.nu <- sqrt(1/tau.nu) # st dev of prior for spatially structured effects

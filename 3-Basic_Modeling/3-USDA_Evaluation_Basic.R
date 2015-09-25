@@ -26,26 +26,28 @@ if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
 
-data %>%
-  group_by(zip, year, STATE, ruc03, long, lat) %>%
-  mutate(HHINC_IRS_R = AGI_IRS_R*1000 / HH_IRS,
-         HHWAGE_IRS_R = Wages_IRS_R*1000 / HH_IRS) %>%
-  select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
-         ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
-         loans, ploans, biploans1234) %>%
-  summarise_each(funs(mean)) -> pdata
-rm(data)
+data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
+data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
 
-# Define some troublesome variables
-pdata$logINC <- ifelse(pdata$HHINC_IRS_R < 1, 0, log(pdata$HHINC_IRS_R))
-pdata$iloans <- 1*(pdata$loans > 0)
-pdata$ipilot <- 1*(pdata$ploans > 0)
-pdata$icur   <- 1*(pdata$biploans1234 > 0)
-pdata$ruc    <- factor(pdata$ruc03)
-levels(pdata$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
+data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
+data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
+data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
+data$iloans <- 1*(data$loans > 0)
+data$ipilot <- 1*(data$ploans > 0)
+data$icur   <- 1*(data$biploans1234 > 0)
+data$ruc    <- factor(data$ruc03)
+levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
                          "nonadj" = c(5,7,9))
 
-pdata <- pdata.frame(pdata, index = c("zip", "year"))
+data %>%
+  group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
+  dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
+                logINC, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
+                loans, ploans, biploans1234, iloans, ipilot, icur, long, lat) %>%
+  summarise_each(funs(mean)) -> pdata
+
+pdata  <- pdata.frame(pdata, index = c("zip", "year"))
+pdata1 <- pdata.frame(data, index = c("zip", "time"))
 
 #Extremely nonlinear in establishment and population
 # http://www.princeton.edu/~otorres/Panel101R.pdf

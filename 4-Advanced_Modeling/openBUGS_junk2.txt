@@ -1,0 +1,59 @@
+#  http://www.dpi.inpe.br/Miguel/Curso_Trevor/Course_STModellingSmallAreasDiseaseRates_Trevor_Bailey.pdf
+
+for (i in 1 : regions) {
+  for (t in 1 : time) {
+    cases[i,t] ~ dpois(mu[i,t])
+    log(mu[i,t]) <- log(e[i]) + alpha + beta1*x1[i]+beta2*x2[i]+beta3*x3[i,t]+phi[i]+nu[i]+delta[t]+omega[t]
+    rho[i,t]<-exp(alpha + beta1*x1[i]+beta2*x2[i]+beta3*x3[i,t]+phi[i]+nu[i]+delta[t]+omega[t]) # RR
+    rhoadj[i,t]<-exp(phi[i]+nu[i]+delta[t]+omega[t]) # RR adjusted for covariates
+  }
+  phi[i] ~ dnorm(0,tau.phi)
+  rhoiadj[i]<-exp(phi[i]+nu[i]) # RR adjusted for covariates averaged over all years
+}
+nu[1:regions] ~ car.normal(adj[], weights[], num[], tau.nu)
+delta[1]<-0
+omega[1] ~ dnorm(0, tau.omega1)
+rhotadj[1]<-exp(omega[t]) # RR adjusted for covariates in year 1 averaged over all districts
+for (t in 2 :time) {
+  delta[t] ~ dnorm(0,tau.delta)
+  omega[t]~dnorm(omega[t-1],tau.omega)
+  rhotadj[t]<-exp(delta[t]+omega[t]) # RR adjusted for covariates in years 2-6 averaged over all districts
+}
+alpha ~ dflat()
+beta1 ~ dnorm(0.0, 1.0E-5)
+beta2 ~ dnorm(0.0, 1.0E-5)
+beta3 ~ dnorm(0.0, 1.0E-5)
+tau.phi ~ dgamma(0.1,0.1)
+tau.nu ~ dgamma(0.1,0.1)
+tau.delta ~ dgamma(0.1,0.1)
+tau.omega1 ~ dgamma(0.1,0.1)
+tau.omega ~ dgamma(0.1,0.1)
+####################################
+for (i in 1 : regions) {
+  for (t in 1 : time) {
+    cases[i,t] ~ dpois(mu[i,t])
+    log(mu[i,t]) <- log(e[i]) + alpha + beta1*x1[i]+beta2*x2[i]+beta3*x3[i]+phi[i]+nu[i]+delta[t]+omega[t]
+    rho[i,t]<-exp(alpha + beta1*x1[i]+beta2*x2[i]+beta3*x3[i]+phi[i]+nu[i]+delta[t]+omega[t]) # RR
+    rhoadj[i,t]<-exp(phi[i]+nu[i]+delta[t]+omega[t]) # Adjusted RR
+  }
+  phi[i] ~ dnorm(0,tau.phi)
+  rhoiadj[i]<-exp(phi[i]+nu[i]) # Adjusted RR over all months/years
+}
+nu[1:regions] ~ car.normal(adj[], weights[], num[], tau.nu)
+delta[1]<-0
+omega[1] ~ dnorm(0, tau.omega1)
+rhotadj[1]<-exp(omega[t]) # Adjusted RR in month 1 over all districts/years
+for (t in 2 :time) {
+  delta[t] ~ dnorm(0,tau.delta)
+  omega[t]~dnorm(omega[t-1],tau.omega)
+  rhotadj[t]<-exp(delta[t]+omega[t]) # Adjusted RR in months 2-12 over all districts/years
+}
+alpha ~ dflat()
+beta1 ~ dnorm(0.0, 1.0E-5)
+beta2 ~ dnorm(0.0, 1.0E-5)
+beta3 ~ dnorm(0.0, 1.0E-5)
+tau.phi ~ dgamma(0.1,0.1)
+tau.nu ~ dgamma(0.1,0.1)
+tau.delta ~ dgamma(0.1,0.1)
+tau.omega1 ~ dgamma(0.1,0.1)
+tau.omega ~ dgamma(0.1,0.1)

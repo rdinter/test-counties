@@ -1,0 +1,106 @@
+---
+title: "3-USDA Evaluation Probability of Loan"
+author: "Robert Dinterman"
+date: '`r Sys.Date()`'
+output: pdf_document
+---
+
+```{r, include=FALSE}
+library(knitr)
+opts_knit$set(root.dir = normalizePath(".."))
+read_chunk("3-USDA_Evaluation_Prob_Loan.R")
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, dev='png')
+```
+
+```{r load, include=FALSE}
+<<Start>>
+```
+
+# Broadband Loan Programs
+
+In September 2005, the United States Department of Agriculture (USDA) Rural Utilities Service (RUS) released an [Audit Report](http://www.usda.gov/oig/webdocs/09601-04-TE.pdf) for their Broadband Grant and Loan Programs. These included two programs: Broadband Pilot Grant/Loan Program and 2002 Farm Bill Broadband Loan Program. 
+
+The Pilot Program formed from amendments to the Distance Learning and Telemedicine Program in fiscal year 2001 and 2002 in order to provide funds for rural, lower-income communities for the stated purpose "to encourage telecommunications carriers to provide broadband service to rural consumers where such service had not existed" and for "stimulating economic development and enhancing education and health care opportunities." The Loans were treasury rate loan funds totaling $100 million in 2001 and $80 million in 2002 while the grants totaled $20 million for 2002 and $10 million for 2003. The Pilot Program was meant to be small in scope so that RUS could determine the feasibility and effectiveness of providing loans and grants targeted for projects involving high-speed internet access and availability. The audit found that while the targeted areas were to be rural and low-income, a disproportionate amount of funds ended up in wealth suburban communities around the Houston area which triggered a reevaluation of the disbursement process. These would be corrected with the 2002 Farm Bill program.
+
+The 2002 Farm Bill provided funding for RUS to establish the Rural Broadband Access Loan and Loan Guarantee Program and the Broadband Grant Program. These programs were established in the 2003 fiscal year but were provided funding through the Farm Bill from 2002 to 2007. The grant program expanded its stated directive, stating that funding will be provided for "broadband transmission service that fosters economic growth and delivers enhanced educational, health care, and public safety services." The Farm Bill provided for over $2.7 billion in Loans and Grants.
+
+# Determinants of Loan/Grant Receipt
+
+The stated objectives from RUS for disbursement of loans and grants were to target under-served rural communities with fewer than 20,000 inhabitants, as determined by the Census Bureau, and not located in a Standard Metropolitan Statistical Area. By using a logit specification, we can input the following covariates in attempt to predict whether a zip code will receive a loan/grant:
+
+1. `I(Prov_alt < 2)TRUE` - an indicator variable for whether or not a zip code had fewer than 4 broadband providers as reported in December of 2000.
+2. `I(SUMBLKPOP < 20000)TRUE` - an indicator variable for whether or not a zip code's population was fewer than 20,000 as of 2003 as reported by the Census Bureau. The year 2003 was chosen because that was the only available year I had for zip code level population statistics.
+3. `rucadj` - an indicator variable for whether or not the zip code lies in a rural county that is adjacent to a metro county.
+4. `rucnonadj` - an indicator variable for whether or not the zip code lies in a rural county that is not adjacent to a metro county.
+
+The first set of results is via maximum likelihood methods of estimation and assumes homoskedasticity in the variance of the errors. The second set or results relaxes the homoskedasticity assumption to allow for heteroskedasticity in the errors.
+
+**Ignore the `Coefficients (binomial model with logit link):` and focus on `Latent scale model coefficients (with log link):`**
+
+```{r Logits}
+<<Logits>>
+```
+
+Both results indicate that having fewer than 4 broadband providers increased the probability of being awarded a loan through either the Pilot or Farm Bill programs. We also see that rural counties adjacent to metro counties are more likely to receive loans/grants. The interesting, and noted problem in the Audit, is that population of zip code fewer than 20,000 reduces the probability of receiving a loan. This result is significant under the assumption of homoskedasticity, but when this is relaxed it is no longer significant.
+
+Checking the fitted values, we see that there are limited predicted zip codes that have a probability of receiving a loan/grant in excess of 10\%. This is likely because the model is too simple.
+
+Although this particular model captures the *stated* criteria to obtain a loan/grant, it does a poor job capturing what the factors that actually affected disbursement.
+
+## More Accurate Model
+
+In order to better model the probability of receiving a loan, I include variables that have been associated with broadband availability:
+
+1. `Prov_alt` - this is a count of number of broadband providers. This variable is slightly different than how I modeled it in the past, here I make the suppressed 1-3 count equal to 1 and subtract 2 from all values greater than 4.
+2. `log(SUMBLKPOP + 1)` - this is a log of population in 2003. The one is because there are a few zip codes with no population and log(0) is undefined.
+3. `log(est)` - log of the number of establishments in a zip code as a way to proxy for the demand of broadband in a zip code. More establishments should indicate a greater incentive for the community to apply for a loan.
+4. `logINC` - log of mean income at the county level, data are from IRS.
+5. `tri` - an index of topographical ruggedness that ranges from 0 (not rugged) to 100 (very rugged).
+
+These variables add in more variation across zip codes as the previous model only had dummy variables. I still maintain the previous dummy variables as a way to verify whether or not the programs reached their intended goals. I eschew the homoskedastic model and only report for the relaxed heteroskedastic model:
+
+```{r Accurate}
+<<Accurate>>
+```
+
+Ah, much better.
+
+A likelihood ratio test of homoskedasticity strongly rejects the null, which is evidence in favor of the chosen model. Further, we see that number of broadband providers is a negatively related variable to the probability of receiving a loan/grant. This makes intuitive sense that areas with already high number of broadband providers are not likely to receive (or even apply for) these loans/grants as there is existing competition in that community.
+
+A takeaway from this regression is that it does appear that there is some evidence that the loan/grant programs targeted under-served areas and for smaller communities (although the coefficient associated with the threshold of 20,000 is the wrong sign, it is not statistically different from 0). One worrisome finding is that the rural non-adjacent areas appear to have a significantly negative association with receiving these loans/grants. Interpretation here is difficult because we only know communities which **received** loans/grants and not those which *applied for* loans/grants. If the rural non-adjacent areas are also associated with areas which were less likely to apply for grants, then the coefficient associated rural non-adjacent would be biased downward. Controlling for the probability of applying for a loan may render this finding insignificant or even change the sign on the coefficient.
+
+
+## Pilot Program
+
+As a way to further disaggregate the data and focus on the specific programs, we can do the above analysis but only look at communities with Pilot loans/grants:
+
+```{r Pilot}
+<<Pilot>>
+```
+
+There appears to be about the same qualitative results as above, although the fit of the model indicates that very few zip codes had even a 10\% chance at receiving these loans. This does jive with what one would expect. The Pilot Program was relatively small with approximately 30 loans/grants disbursed and the potential pool of communities that match the description is vast across the United States (~30,000). So the results make sense.
+
+
+## Farm Bill Program
+
+We can perform the same analysis above, but for the Farm Bill loans/grants:
+
+```{r Farm Bill}
+<<Farm Bill>>
+```
+
+Because the Farm Bill did not come into effect until 2002, it may be more appropriate to use the values of number of broadband providers from 2002 in the regression instead:
+
+```{r Farm Bill 2}
+hpbip   <- hetglm(ibip1234 ~ I(Prov_alt < 2) + Prov_alt + log(SUMBLKPOP + 1) +
+                    I(SUMBLKPOP < 20000) + ruc + log(est) + logINC + tri,
+                  family = binomial(link = "logit"),
+                  data = data, subset = time == "2002-12-31")
+summary(hpbip)
+logitplot(hpbip)
+```
+
+There is a marked improvement in the Farm Bill's disbursement of loans to smaller communities, but aside from that we see qualitatively the same results. It is still puzzling to see that rural non-adjacent communities are less likely to receive a loan. If only we had applicant data ...
