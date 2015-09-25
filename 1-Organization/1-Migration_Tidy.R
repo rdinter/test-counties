@@ -90,22 +90,15 @@ allin <- bind_rows(allin, temp)
 
 # Finally, we need the US values of 97000 
 temp <- allin %>% 
-  select(year:County_Code_Origin, Return_Num:Aggr_AGI) %>% 
   filter(State_Code_Origin %in% c(96, 98), year < 1995) %>% 
-  gather(key, value, Return_Num:Aggr_AGI) %>% 
-  unite(temp, key, State_Code_Origin) %>% 
-  spread(temp, value) %>% 
-  mutate(Return_Num = ifelse(is.na(Return_Num_96) & is.na(Return_Num_98), NA,
-                             ifelse(is.na(Return_Num_98), Return_Num_96,
-                                    Return_Num_96 - Return_Num_98)),
-         Exmpt_Num = ifelse(is.na(Exmpt_Num_96) & is.na(Exmpt_Num_98), NA,
-                             ifelse(is.na(Exmpt_Num_98), Exmpt_Num_96,
-                                    Exmpt_Num_96 - Exmpt_Num_98)),
-         Aggr_AGI = ifelse(is.na(Aggr_AGI_96) & is.na(Aggr_AGI_98), NA,
-                             ifelse(is.na(Aggr_AGI_98), Aggr_AGI_96,
-                                    Aggr_AGI_96 - Aggr_AGI_98))) %>% 
-  select(year:County_Code_Origin, Return_Num:Aggr_AGI)
-
+  group_by(year, State_Code_Dest, County_Code_Dest) %>%
+  na.omit(Return_Num) %>% 
+  summarise(Return_Num = Return_Num[State_Code_Origin == 96] -
+              max(0, Return_Num[State_Code_Origin == 98]),
+            Exmpt_Num = Exmpt_Num[State_Code_Origin == 96] -
+              max(0, Exmpt_Num[State_Code_Origin == 98]),
+            Aggr_AGI = Aggr_AGI[State_Code_Origin == 96] -
+              max(0, Aggr_AGI[State_Code_Origin == 98]))
 temp$State_Code_Origin  <- 97
 temp$County_Code_Origin <- 0
 allin <- bind_rows(allin, temp)
@@ -183,21 +176,15 @@ allout <- bind_rows(allout, temp)
 
 # Finally, we need the US values of 97000 
 temp <- allout %>% 
-  select(year:County_Code_Dest, Return_Num:Aggr_AGI) %>% 
   filter(State_Code_Dest %in% c(96, 98), year < 1995) %>% 
-  gather(key, value, Return_Num:Aggr_AGI) %>% 
-  unite(temp, key, State_Code_Dest) %>% 
-  spread(temp, value) %>% 
-  mutate(Return_Num = ifelse(is.na(Return_Num_96) & is.na(Return_Num_98), NA,
-                             ifelse(is.na(Return_Num_98), Return_Num_96,
-                                    Return_Num_96 - Return_Num_98)),
-         Exmpt_Num = ifelse(is.na(Exmpt_Num_96) & is.na(Exmpt_Num_98), NA,
-                            ifelse(is.na(Exmpt_Num_98), Exmpt_Num_96,
-                                   Exmpt_Num_96 - Exmpt_Num_98)),
-         Aggr_AGI = ifelse(is.na(Aggr_AGI_96) & is.na(Aggr_AGI_98), NA,
-                           ifelse(is.na(Aggr_AGI_98), Aggr_AGI_96,
-                                  Aggr_AGI_96 - Aggr_AGI_98))) %>% 
-  select(year:County_Code_Dest, Return_Num:Aggr_AGI)
+  group_by(year, State_Code_Origin, County_Code_Origin) %>%
+  na.omit(Return_Num) %>% 
+  summarise(Return_Num = Return_Num[State_Code_Dest == 96] -
+              max(0, Return_Num[State_Code_Dest == 98]),
+            Exmpt_Num = Exmpt_Num[State_Code_Dest == 96] -
+              max(0, Exmpt_Num[State_Code_Dest == 98]),
+            Aggr_AGI = Aggr_AGI[State_Code_Dest == 96] -
+              max(0, Aggr_AGI[State_Code_Dest == 98]))
 temp$State_Code_Dest  <- 97
 temp$County_Code_Dest <- 0
 allout <- bind_rows(allout, temp)
@@ -205,7 +192,6 @@ allout <- bind_rows(allout, temp)
 allout$ofips <- 1000*allout$State_Code_Origin + allout$County_Code_Origin
 allout$dfips <- 1000*allout$State_Code_Dest + allout$County_Code_Dest
 
-rm(allindata, alloutdata)
 
 # ---- FIPS Issues --------------------------------------------------------
 
@@ -250,135 +236,35 @@ allout %>%
   filter(ofips %in% trubs) %>% 
   xtabs(~ofips + year, data = .)
 
-source("1-Organization/1-Migration_functions.R")
+# Think about how to aggregate all of them ... they need to be in long form
+#  Do I take an average? Sure! 
+ 
+###################################################
+# http://blogs.casa.ucl.ac.uk/category/r-spatial/
+###################################################
 
-allin <- allin %>% 
-  mutate(dfips = fipchange(dfips), ofips = fipchange(ofips)) %>%
-  group_by(year, dfips, ofips) %>%
-  summarise_each(funs(sum(., na.rm = T)), Return_Num, Exmpt_Num, Aggr_AGI)
-allin$Return_Num <- ifelse(allin$Return_Num == 0, NA, allin$Return_Num)
-allin$Exmpt_Num  <- ifelse(is.na(allin$Return_Num), NA, allin$Exmpt_Num)
-allin$Aggr_AGI   <- ifelse(is.na(allin$Return_Num), NA, allin$Aggr_AGI)
+xquiet <- scale_x_continuous("", breaks = NULL)
+yquiet <- scale_y_continuous("", breaks = NULL)
+quiet  <- list(xquiet, yquiet)
 
-allout <- allout %>% 
-  mutate(dfips = fipchange(dfips), ofips = fipchange(ofips)) %>%
-  group_by(year, dfips, ofips) %>%
-  summarise_each(funs(sum(., na.rm = T)), Return_Num, Exmpt_Num, Aggr_AGI)
-allout$Return_Num <- ifelse(allout$Return_Num == 0, NA, allout$Return_Num)
-allout$Exmpt_Num  <- ifelse(is.na(allout$Return_Num), NA, allout$Exmpt_Num)
-allout$Aggr_AGI   <- ifelse(is.na(allout$Return_Num), NA, allout$Aggr_AGI)
+ggplot(dest.xy[which(dest.xy$trips>10),], aes(oX, oY)) +
+  geom_segment(aes(x = oX, y = oY, xend = dX, yend = dY, alpha = trips),
+               col = "white") +
+  scale_alpha_continuous(range = c(0.03, 0.3)) +
+  theme(panel.background = element_rect(fill = "black", colour = "black")) +
+  quiet +
+  coord_equal()
 
-
-# ---- Aggregate Migration ------------------------------------------------
-
-# Two groups: one with only 96000 and the other with cty-cty (incl. 98000)
-
-allintotal  <- allin %>% 
-  filter(ofips == 96000, dfips < 57000, dfips %% 1000 != 0) %>% 
-  rename(fips = dfips, IN_Return = Return_Num, IN_Exmpt = Exmpt_Num,
-         IN_AGI = Aggr_AGI)
-
-allouttotal <- allout %>% 
-  filter(dfips == 96000, ofips < 57000, ofips %% 1000 != 0) %>% 
-  rename(fips = ofips, OUT_Return = Return_Num, OUT_Exmpt = Exmpt_Num,
-         OUT_AGI = Aggr_AGI)
-
-data <- full_join(allintotal, allouttotal)
-data <- data %>% 
-  select(-dfips, -ofips) %>% 
-  mutate(NET_Return = IN_Return - OUT_Return,
-         NET_Exmpt = IN_Exmpt - OUT_Exmpt,
-         NET_AGI = IN_AGI - OUT_AGI)
-
-save(data, file = paste0(localDir, "/netmigration.Rda"))
-write_csv(data, paste0(localDir, "/netmigration.csv"))
-rm(allintotal, allouttotal)
-
-# ---- cty2cty ------------------------------------------------------------
-
-incty <- allin %>% 
-  filter(dfips %% 1000 != 0|dfips == 98000, dfips < 56999|dfips == 98000,
-         ofips %% 1000 != 0|ofips == 98000, ofips < 56999|ofips == 98000) %>% 
-  mutate(Return_Num = replace(Return_Num, is.na(Return_Num), -1),
-         Exmpt_Num  = replace(Exmpt_Num, is.na(Exmpt_Num), -1),
-         Aggr_AGI   = replace(Aggr_AGI, is.na(Aggr_AGI), -1)) %>% 
-  rename(IN_Return = Return_Num, IN_Exmpt = Exmpt_Num, IN_AGI = Aggr_AGI)
-
-outcty <- allout %>% 
-  filter(dfips %% 1000 != 0|dfips == 98000, dfips < 56999|dfips == 98000,
-         ofips %% 1000 != 0|ofips == 98000, ofips < 56999|ofips == 98000) %>% 
-  mutate(Return_Num = replace(Return_Num, is.na(Return_Num), -1),
-         Exmpt_Num  = replace(Exmpt_Num, is.na(Exmpt_Num), -1),
-         Aggr_AGI   = replace(Aggr_AGI, is.na(Aggr_AGI), -1)) %>% 
-  rename(OUT_Return = Return_Num, OUT_Exmpt = Exmpt_Num, OUT_AGI = Aggr_AGI)
-
-data <- full_join(incty, outcty)
-
-# ----
-
-# Evaluate the matches of IN versus OUT
-data %>% 
-  group_by(year) %>% 
-  summarise(Total = n(),
-            Return = sum(IN_Return == OUT_Return, na.rm = T),
-            Exmpt  = sum(IN_Exmpt == OUT_Exmpt, na.rm = T),
-            AGI    = sum(IN_AGI == OUT_AGI, na.rm = T),
-            Match  = paste0(round(100*Return / Total, 1), "%")) %>%
-  knitr::kable()
-
-data %>% 
-  group_by(year) %>% 
-  summarise(Total = n(),
-            SupIN  = sum((IN_Return == -1 | is.na(IN_Return)) &
-                           (!is.na(OUT_Return)), na.rm = T),
-            SupOUT = sum((OUT_Return == -1 | is.na(OUT_Return)) &
-                           (!is.na(IN_Return)), na.rm = T),
-            BadMatch = paste0(round(100*(SupIN + SupOUT) / Total, 1),
-                              "%")) %>%
-  knitr::kable()
-
-# ----
-
-data <- data %>% 
-  mutate(Return = ifelse(!is.na(IN_Return), IN_Return, OUT_Return),
-         Exmpt  = ifelse(!is.na(IN_Exmpt), IN_Exmpt, OUT_Exmpt),
-         AGI    = ifelse(!is.na(IN_AGI), IN_AGI, OUT_AGI))
-temp <- data$Return == -1
-ctycty <- data %>% 
-  as.data.frame() %>% 
-  select(year:ofips, Return:AGI) %>% 
-  mutate(Return = replace(Return, temp, NA),
-         Exmpt  = replace(Exmpt, temp, NA),
-         AGI    = replace(AGI, temp, NA))
-
-All <- subset(All, FIPS < 57000)
-
-check <- ctycty$dfips %in% All$FIPS
-unique(ctycty$dfips[!check])
-# [1]  2195  2198  2230  2105  2275 98000
-
-check <- All$FIPS %in% ctycty$dfips
-unique(All$FIPS[!check])
-# [1]  2000  2201  2232  2280 17000 18000 23000 26000 27000 36000 39000
-# [12] 42000 53000 55000
-
-coords        <- data.frame(coordinates(All))
-names(coords) <- c("long", "lat")
-coords$fips   <- as.numeric(row.names(coords))
-
-ctycty <- ctycty %>% 
-  left_join(coords, by = c("ofips" = "fips")) %>% 
-  rename(long.o = long, lat.o = lat) %>% 
-  left_join(coords, by = c("dfips" = "fips")) %>% 
-  rename(long.d = long, lat.d = lat)
-
-write_csv(ctycty, paste0(localDir, "/ctycty.csv"))
-save(ctycty, file = paste0(localDir, "/ctycty.Rda"))
+# write_csv(DATA, paste0(localDir, "/Migration.csv"))
+# save(DATA, file = paste0(localDir, "/Migration.Rda"))
 
 
-# ---- Controls -----------------------------------------------------------
+# Merge all of the control variables needed in this setting! Likely as a
+#  separate file and saved, but then as a totally massive freaking data.frame
+#  with Ocontrols and Dcontrols
 
-
+# write_csv(data, paste0(localDir, "/Final.csv"))
+# save(data, file = paste0(localDir, "/Final.Rda"))
 
 rm(list = ls())
 

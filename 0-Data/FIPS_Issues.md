@@ -28,9 +28,8 @@ A typical solution for Alaska is to drop the state (and Hawaii) from the analysi
 
 | Time | Deprecated FIP | Change to      |
 |:-----|:---------------|:---------------|
-| 1993 | 2231           | 2232           |
-| 1993 | N E W          | 2282           |
-| 2007 | 2232           | 2230           |
+| 1993 | 2231           | 2232/2282      |
+| 2006 | 2232           | 2105/2230      |
 | 2007 | N E W          | 2105           |
 | 2008 | 2201           | 2198           |
 | 2008 | 2280           | 2195           |
