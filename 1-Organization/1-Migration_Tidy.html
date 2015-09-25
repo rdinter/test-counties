@@ -10,7 +10,7 @@
 
 <meta name="author" content="Robert Dinterman" />
 
-<meta name="date" content="2015-09-21" />
+<meta name="date" content="2015-09-24" />
 
 <title>1-Migration Tidy</title>
 
@@ -64,7 +64,7 @@ img {
 <div id="header">
 <h1 class="title">1-Migration Tidy</h1>
 <h4 class="author"><em>Robert Dinterman</em></h4>
-<h4 class="date"><em>2015-09-21</em></h4>
+<h4 class="date"><em>2015-09-24</em></h4>
 </div>
 
 
@@ -1564,7 +1564,171 @@ img {
 </div>
 <div id="inflow-versus-outflow-merge" class="section level1">
 <h1>Inflow versus Outflow Merge</h1>
-<p>The IRS data contains two sets of files: one for the inflow between regions and one for the outflow between regions. I have looked across the IRS documentation in attempt to verify that the inflow from region A to region B should also be the outflow from region B to region A. I have not found confirmation of this from documentation, so we need to attempt to figure this out through inspection of the data. A casual glance indicates to me that 2004 appears to be the first year that the IRS matches up county-to-county connections across inflows and outflows.</p>
+<p>The IRS data contains two sets of files: one for the inflow between regions and one for the outflow between regions. I have looked across the IRS documentation in attempt to verify that the inflow from region A to region B should also be the outflow from region B to region A. I have not found confirmation of this from documentation, so we need to attempt to figure this out through inspection of the data.</p>
+<p>After combining the inflows and outflows files by year, origin FIPS code, and destination FIPS code, we can inspect to see how well these match. Below is a table which indicates <code>Total</code> as the number of county to county pairs; <code>Return</code>, <code>Exmpt</code> and <code>AGI</code> as the number of pairs which match for these categories; and <code>Match</code> which is the percentage of pairs which correctly match out of all the observed pairs:</p>
+<p>There appears to be some change in the IRS procedure of reporting flows in 2004 as before the average percentage matching is greater than 97% but after this falls to below 95%. But the high percentage of match is a positive sign here. Next, we need to consider why there are values which do not match. To do so, I check to see the values where <code>IN</code> (or <code>OUT</code>) are suppressed but the <code>OUT</code> (or <code>IN</code>) are not suppressed:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">year</th>
+<th align="right">Total</th>
+<th align="right">SupIN</th>
+<th align="right">SupOUT</th>
+<th align="left">BadMatch</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1992</td>
+<td align="right">79631</td>
+<td align="right">1049</td>
+<td align="right">1286</td>
+<td align="left">2.9%</td>
+</tr>
+<tr class="even">
+<td align="right">1993</td>
+<td align="right">79291</td>
+<td align="right">984</td>
+<td align="right">1113</td>
+<td align="left">2.6%</td>
+</tr>
+<tr class="odd">
+<td align="right">1994</td>
+<td align="right">81346</td>
+<td align="right">891</td>
+<td align="right">1127</td>
+<td align="left">2.5%</td>
+</tr>
+<tr class="even">
+<td align="right">1995</td>
+<td align="right">80654</td>
+<td align="right">969</td>
+<td align="right">1109</td>
+<td align="left">2.6%</td>
+</tr>
+<tr class="odd">
+<td align="right">1996</td>
+<td align="right">82474</td>
+<td align="right">993</td>
+<td align="right">1051</td>
+<td align="left">2.5%</td>
+</tr>
+<tr class="even">
+<td align="right">1997</td>
+<td align="right">83153</td>
+<td align="right">1010</td>
+<td align="right">1112</td>
+<td align="left">2.6%</td>
+</tr>
+<tr class="odd">
+<td align="right">1998</td>
+<td align="right">84330</td>
+<td align="right">961</td>
+<td align="right">1059</td>
+<td align="left">2.4%</td>
+</tr>
+<tr class="even">
+<td align="right">1999</td>
+<td align="right">85030</td>
+<td align="right">984</td>
+<td align="right">1048</td>
+<td align="left">2.4%</td>
+</tr>
+<tr class="odd">
+<td align="right">2000</td>
+<td align="right">85716</td>
+<td align="right">1000</td>
+<td align="right">1055</td>
+<td align="left">2.4%</td>
+</tr>
+<tr class="even">
+<td align="right">2001</td>
+<td align="right">85334</td>
+<td align="right">1058</td>
+<td align="right">1110</td>
+<td align="left">2.5%</td>
+</tr>
+<tr class="odd">
+<td align="right">2002</td>
+<td align="right">83430</td>
+<td align="right">1041</td>
+<td align="right">1158</td>
+<td align="left">2.6%</td>
+</tr>
+<tr class="even">
+<td align="right">2003</td>
+<td align="right">83470</td>
+<td align="right">980</td>
+<td align="right">1083</td>
+<td align="left">2.5%</td>
+</tr>
+<tr class="odd">
+<td align="right">2004</td>
+<td align="right">90010</td>
+<td align="right">3185</td>
+<td align="right">3198</td>
+<td align="left">7.1%</td>
+</tr>
+<tr class="even">
+<td align="right">2005</td>
+<td align="right">93653</td>
+<td align="right">3185</td>
+<td align="right">3202</td>
+<td align="left">6.8%</td>
+</tr>
+<tr class="odd">
+<td align="right">2006</td>
+<td align="right">92023</td>
+<td align="right">3174</td>
+<td align="right">3200</td>
+<td align="left">6.9%</td>
+</tr>
+<tr class="even">
+<td align="right">2007</td>
+<td align="right">93928</td>
+<td align="right">3188</td>
+<td align="right">3206</td>
+<td align="left">6.8%</td>
+</tr>
+<tr class="odd">
+<td align="right">2008</td>
+<td align="right">91441</td>
+<td align="right">3192</td>
+<td align="right">3209</td>
+<td align="left">7%</td>
+</tr>
+<tr class="even">
+<td align="right">2009</td>
+<td align="right">86708</td>
+<td align="right">3189</td>
+<td align="right">3212</td>
+<td align="left">7.4%</td>
+</tr>
+<tr class="odd">
+<td align="right">2010</td>
+<td align="right">89496</td>
+<td align="right">3178</td>
+<td align="right">3194</td>
+<td align="left">7.1%</td>
+</tr>
+<tr class="even">
+<td align="right">2011</td>
+<td align="right">96572</td>
+<td align="right">2526</td>
+<td align="right">2440</td>
+<td align="left">5.1%</td>
+</tr>
+<tr class="odd">
+<td align="right">2012</td>
+<td align="right">98362</td>
+<td align="right">2472</td>
+<td align="right">2402</td>
+<td align="left">5%</td>
+</tr>
+</tbody>
+</table>
+<p>As it turns out, the only values that do not match are due to a suppression on one side of the values but not the other. By combining the suppressed values of the inflows and outflows, we are able to get a fuller dataset for county-to-county level migration than if we only used one of these. The data are also symmetric in that the value of returns from County A to County B in the inflow and outflow are identical.</p>
+<p>We can now move onto using these data for visualizations and modeling.</p>
 </div>
 
 
