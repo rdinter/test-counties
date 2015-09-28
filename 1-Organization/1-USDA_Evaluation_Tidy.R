@@ -267,6 +267,12 @@ data %>%
   select(zip, ipilot, ibip12, ibip1234, iloans) %>%
   left_join(data, .) -> data
 
+# Data are not consistent across time, we need to drop ZIPs that do not
+# appear in all years:
+temp <- table(data$zip)
+keep <- temp[temp == 18] #only keep zips that appear 18 times.
+data <- filter(data, zip %in% as.numeric(names(keep)))
+
 write_csv(data, paste0(localDir, "/Final.csv"))
 save(data, file = paste0(localDir, "/Final.Rda"))
 
