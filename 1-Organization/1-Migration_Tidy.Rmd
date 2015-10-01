@@ -20,14 +20,14 @@ knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, dev='png')
 ```
 
 # Preparing Migration Data
-The Internal Revenue Service (IRS) maintains a [dataset of county-to-county level migration](http://www.irs.gov/uac/SOI-Tax-Stats-Migration-Data) from 1990 to 2013. Migration data for the United States are based on year-to-year address changes reported on individual income tax returns filed with the IRS. They present migration patterns by state or by county for the entire United States and are available for inflows—the number of new residents who moved to a state or county and where they migrated from, and outflows—the number of residents leaving a state or county and where they went. The data are available for filing years 1991 through 2013 and include:
+The Internal Revenue Service (IRS) maintains a [dataset of county-to-county level migration](http://www.irs.gov/uac/SOI-Tax-Stats-Migration-Data) from 1990 to 2013. Migration data for the United States are based on year-to-year address changes reported on individual income tax returns filed with the IRS. They present migration patterns by state or by county for the entire United States and are available for inflows—the number of new residents who moved to a state or county and where they migrated from, and outflows—the number of residents leaving a state or county and where they went. The data are available for filing years 1991 through 2014 which correspond to the residence in the fiscal year of 1990 to 2013. A person is considered a migrant if they have a different filing address across two years (so the year 1990 corresponds to someone who lived in County A in 1989 and then County B in 1990). The variables within this dataset include:
 
 * `Return_Num` - number of returns filed, which approximates the number of households that migrated.
 * `Exmpt_Num` - number of personal exemptions claimed, which approximates the number of individuals.
 * `Aggr_AGI` or `AGI` - total adjusted gross income, starting with filing year 1995.
 * Aggregate migration flows at the state level, by the size of adjusted gross income (AGI) and age of the primary taxpayer, starting with filing year 2011.
 
-Data have yet to be parsed for 1990 and 1991 because the `.txt` format is not easily readable. Further, because of data concerns with a large number of negative income flows of extremely unlikely negative values for income flows, the 1993 and 1994 years are omitted:
+I have not yet parsed the data for 1990 and 1991 because the `.txt` format is not easily readable. Further, because of data concerns with a large number of negative income flows of extremely unlikely negative values for income flows, the 1992 to 1994 years are noted to be dubious:
 
 ```{r Example Negatives}
 allindata %>% filter(Aggr_AGI < 0 & !is.na(Aggr_AGI)) %>% arrange(Aggr_AGI) %>% select(year, ofips, dfips, Return_Num:Aggr_AGI) %>%  head(., n = 5) %>% kable(., caption = "Inflows")
@@ -70,12 +70,18 @@ kable(allindata %>% group_by(year) %>% summarise(Total = n(), Suppressed = sum(R
 
 Suppression did not occur before 2004 although it is not clear what the reasoning behind this was. For data purposes, the best practice will be to change all values which are suppressed via the `-1` value to `NA` to delineate that we know there is a connection but do not know the specific value. This will also be helpful with the above AGI problem of large, unrealistic negative values which should be coded as missing values.
 
+We do also see that in 2013 there is a stark change in data quality and a change in the minimum number of filers. The IRS reports that:
+
+>In order to strengthen the disclosure protection procedures of the data, thresholds for inclusion within the state and county tabulations have been raised to 10 (for the state files) and 20 (for the county files).
+
+This change in data definitions would imply that the values before 2013 with Returns of fewer than 20 would need to be supressed in order to match the 2013 data. This is a removal of information in order to maintain stability and would depend on the particular project as to whether it may be preferrable to simply ignore 2013 and beyond.
+
 While there may be some interesting research ideas with suppressed data, the easiest solution here is to simply drop the suppressed as there are no more than 5\% of all values suppressed. We also see that the minimum threshold for reporting a migration connection (10 filers) has remained around 7,000 observations which is approximately 7\% of all reported connections.
 
 ## Corrections
 The data are not clean or tidy, for one there is a concern of some malfunction on the IRS part because of the large negative `AGI` values above. There is no correction for potentially erroneously entered/calculated data except to flag outliers. But there are other problems which can be corrected. For instance, the FIPS codes for special flows changes across time. These special flows are used to indicate a county to larger region or larger region to county relationship (i.e. Total Migrants into Wake County). The IRS is not consistent across years or within years for this distinction. Cross-checks need to be performed to ensure that all data are consistent.
 
-Working backwards a bit, in the 2011 and 2012 documentation we have the following special codes for each county:
+Working backwards a bit, in the 2011, 2012, and 2013 documentation we have the following special codes for each county:
 
 | Summary                          | Abbrev | State FIPS | County FIPS |
 |:---------------------------------|-------:|-----------:|------------:|

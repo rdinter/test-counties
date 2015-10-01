@@ -131,13 +131,13 @@ write_csv(allindata, paste0(localDir, "/inflows9203.csv"))
 write_csv(alloutdata, paste0(localDir, "/outflows9203.csv"))
 
 
-# ---- Data from 2004 to 2012 ---------------------------------------------
+# ---- Data from 2004 to 2013 ---------------------------------------------
 
 inflows  <- c("countyinflow0405.csv", "countyinflow0506.csv",
               "countyinflow0607.csv", "countyinflow0708.csv",
               "countyinflow0809.csv", "countyinflow0910.csv",
               "countyinflow1011.csv", "countyinflow1112.csv",
-              "countyinflow1213.csv")
+              "countyinflow1213.csv", "countyinflow1314.csv")
 
 indata   <- sapply(inflows, function(x){
   file       <- paste0(data_source, "/", x)
@@ -165,7 +165,7 @@ outflows <- c("countyoutflow0405.csv", "countyoutflow0506.csv",
               "countyoutflow0607.csv", "countyoutflow0708.csv",
               "countyoutflow0809.csv", "countyoutflow0910.csv",
               "countyoutflow1011.csv", "countyoutflow1112.csv",
-              "countyoutflow1213.csv")
+              "countyoutflow1213.csv", "countyoutflow1314.csv")
 outdata  <- sapply(outflows, function(x){
   file       <- paste0(data_source, "/", x)
   if (!file.exists(file)) (download.file(paste0(url, x), file))
