@@ -21,6 +21,8 @@ set.seed(324) # Done for pretty histograms
 data$Prov_hist <- ifelse(data$Prov_num == 2,
                          runif(sum(data$Prov_num == 2),1,3),
                          data$Prov_num)
+data$Prov_alt  <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
+data$Prov_alt  <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
 
 
 # ---- Zip time -----------------------------------------------------------
@@ -29,8 +31,19 @@ hp <- ggplot(data, aes(x = Prov_hist)) + geom_histogram() +
 hp + facet_wrap(~ time) + theme_minimal() +
   scale_x_discrete(breaks = c(5, 10, 15)) +
   labs(x = "Number of Providers", y = "")#,
-       #title = "Broadband Providers by Zip Code \n Across Time")
+#title = "Broadband Providers by Zip Code \n Across Time")
 ggsave(paste0(localDir, "/Providers_zip_time.png"), width = 10, height = 7.5)
+
+# ---- Zip time alt -------------------------------------------------------
+
+hp <- ggplot(data, aes(x = Prov_alt)) + geom_histogram() +
+  coord_cartesian(xlim = c(0, 15)) 
+hp + facet_wrap(~ time) + theme_minimal() +
+  scale_x_discrete(breaks = c(5, 10, 15)) +
+  labs(x = "Number of Providers", y = "")#,
+#title = "Broadband Providers by Zip Code \n Across Time")
+ggsave(paste0(localDir, "/Providers_zip_time_alt.png"),
+       width = 10, height = 7.5)
 
 
 # ---- Zip Uptake ---------------------------------------------------------
