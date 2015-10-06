@@ -116,11 +116,14 @@ for (i in files){
 # write_csv(alldata, paste0(localDir, "/countyincome8909.csv"))
 
 
-# Data from 2010 to 2012
+# Data from 2010 to 2013
+# Problem with 2013, it's called county.zip not countydata.zip
 years  <- 2010:2012
 urls   <- paste0(url, years, "countydata.zip")
+urls[4]<- paste0(url, "county", 2013, ".zip")
 files  <- paste(data_source, basename(urls), sep = "/")
-if (all(sapply(files, function(x) !file.exists(x)))) {
+
+if (!all(sapply(files, function(x) file.exists(x)))) {
   mapply(download.file, url = urls, destfile = files)
 }
 
@@ -145,6 +148,7 @@ for (i in files){
                    "Exmpt_Num", "Aggr_AGI", "Wages", "Dividends", "Interest")
   
   year      <- as.numeric(substr(basename(i), 1, 4))
+  if (is.na(year)) year <- 2013 # QUICK FIX
   data$year <- year
   data$fips <- data$STFIPS*1000 + data$CTYFIPS
   
@@ -207,7 +211,7 @@ IRS_POP <- fipssues(IRS_POP, 51005, c(51005, 51560))
 IRS_POP <- fipssues(IRS_POP, 51083, c(51083, 51780))
 
 
-write_csv(IRS_POP, paste0(localDir, "/countyincome8912.csv"))
+write_csv(IRS_POP, paste0(localDir, "/countyincome8913.csv"))
 save(IRS_POP, file = paste0(localDir, "/CTYPop.Rda"))
 
 rm(list = ls())
