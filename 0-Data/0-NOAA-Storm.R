@@ -41,6 +41,10 @@ if (all(sapply(files, function(x) !file.exists(x)))) {
 
 # ---- Split Files --------------------------------------------------------
 
+# # Unsure of the purpose for this file.
+# ugc <- files[grep("ugc", files)]
+# ugc <- read_csv(ugc)
+
 # ---- Events -------------------------------------------------------------
 detail  <- files[grep("StormEvents_details-ftp", files)]
 dfun    <- function(x, n) read_csv(x, col_types = paste(rep("c", n),
