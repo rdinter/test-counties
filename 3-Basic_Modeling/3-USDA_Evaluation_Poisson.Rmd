@@ -1,0 +1,191 @@
+---
+title: "3-USDA Evaluation Poisson"
+author: "Robert Dinterman"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r, include=FALSE}
+library(knitr)
+opts_knit$set(root.dir = normalizePath(".."))
+read_chunk("3-USDA_Evaluation_Poisson.R")
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, dev='png')
+```
+
+```{r load, include=FALSE}
+<<Start>>
+```
+
+# Poisson Panel Regressions for Broadband Availability
+
+The following regressions make use of the `glm` function for generalized linear models in `R` in order to identify the relationship between broadband availability and the USDA Broadband Loan Program. Loosely, we wish to model the number of broadband providers by zip code across the years 1999 to 2008 and determine whether or not the USDA Broadband Loan Program had an impact on broadband availability as this was one of the intended benefits of the subsidized loans. As a quick reference, here is what the dependent variable looks like across time:
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+hp <- ggplot(pdata, aes(x = round(Prov_num))) + geom_histogram() + theme_minimal()
+grid.arrange(hp + scale_x_discrete(breaks = c(5, 10, 15, 20, 25)) +
+               labs(title = "Number of Providers (Pooled)", x= "", y = "Count"),
+             hp + scale_x_discrete(breaks = c(5, 10, 15)) + facet_wrap(~ year) +
+               coord_cartesian(xlim = c(0, 15)) +
+               labs(title = "Across Years", x= "", y = ""),
+             ncol = 2)
+```
+
+***These values have been rounded, the previous graph of these were not rounded which explains why these look different.***
+
+Data on broadband providers is measured twice a year (June 30 and December 31), therefore the two values are averaged for the yearly value. Further, the variable takes on a count value of 0, 1-3\*, 4, 5, 6, ... 31. The value 1-3\* is a suppressed value of broadband providers for confidentiality purposes and has been coded as 2 to be consistent with the literature. In the sample, the mean across all years for providers is `r format(mean(round(pdata$Prov_num)), digits = 2)` and a sample variance of `r format(var(round(pdata$Prov_num)), digits = 2)`. For a Poisson distribution, the mean and variance are equal. This may be troublesome if the conditional mean and variance of the model differ by as much as the sample mean and variance. Therefore, a Negative Binomial is also considered (and likely to be the true process).
+
+Other variables used include:
+
+* `iloans` - an indicator variable for whether or not a zip code received a loan. No loans were given before 2002, so this variable does vary by time.
+* `log(est)` - this is from zip code business pattern data and is the number of establishments in a particular zip code. I take the log of this variable because the distribution is right-skewed. It is possible to substitute this variable with number of employees, annual payroll, or first quarter payroll from the ZBP but I choose not to because those variables are **suppressed for approximately `r paste0(format(sum(pdata$ap == 0) / sum(!is.na(pdata$ap))*100, digits = 2), "%")` of the zip codes**. Establishments is highly correlated with the other variables anyway, so I would rather use a less precise proxy than potentially bias the sample.
+* `log(Pop_IRS)` - IRS has data on number of tax returns filed by county from 1989 until 2013. I use the number of exemptions per county as a way to proxy for the population of a county. This variable is also right-skewed and therefore the log of population is taken instead of population. The alternative for population would be to use US Census data which produce yearly estimates at the county level. These estimates are based off of the 2000 Census and use the demographic age distribution of a county in order to project forward the birth rate and death rate to determine what the population in a county should be. Since this is simply a function of initial conditions in 2000, I choose to use IRS data because there is more variation in the data and it reflects changes in economic conditions across counties that would drive migration (population change).
+* `logINC` - this is tabulated from the same IRS data above using Adjusted Gross Income (AGI) at the county level for each year. This is divided by the number of households for a county and is therefore a proxy for mean income, as reported to the IRS, per year. Again, this is a right-skewed variable which is the justification for taking the logarithm of the variable.
+* `tri` - stands for Terrain Ruggedness Index which uses elevation data for a given polygon to calculate the feature changes in a given area relative to the entire domain. This is at the ZCTA level across the United States and is thought of as a proxy for increased costs of broadband deployment due to rough terrain. This does not vary across years and so zip code fixed effects will take away this variable.
+* `ruc` - the rural-urban continuum code, but for this study I simply use 3 classifications of a county: Metro, Rural but adjacent to a metro county, and Rural but non-adjacent to a metro county. Counties do change across time, but only in years that end in 3 (1993, 2003, ...). I choose to use the values for 2003 as this would be a little bit before the halfway point in the analysis.
+
+## (Quasi-)Poisson Regression Models
+
+I start with by making use of the count nature of the broadband providers variable by assuming it follows a Poisson distribution:
+
+$$ {Prov}_{z,t} | X_{z,t}, \beta \sim {Pois} \left[ exp \left( X_{z,t}'\beta \right) \right]
+$$
+
+The variable ${Prov}_{z,t}$ is the number of providers in zip code $z$ at time $t$. The $X_{z,t}$ are variables at the zip code or county level that determine the level of broadband providers. These are log of establishments, log of population, log of income, terrain ruggedness index, and rural: adjacent and non-adjacent. There is also a time fixed effect for each year included in these regressions.
+
+### Biannual Regression
+
+In the basic panel setting, I averaged the two yearly values of broadband. As a naive start to use of the Poisson distribution, I will start with a Poisson regression with the dependent variable as the biannual values for the provider numbers, thus giving a regression where T = `r length(unique(data$time))` and n = `r length(unique(data$zip))`.
+
+There are two models: the first without year fixed effects and the second including these. An ANOVA test to determine whether the year fixed effects are jointly significant is performed at the bottom which provides evidence of year fixed effects as a significant predictor of broadband diffusion:
+
+```{r Biannual}
+<<Biannual>>
+```
+
+The associated coefficients appear to jive with expectations. There is a positive association with establishments, population, income, and metro setting. Further, tri and rural areas (non-adjacent even moreso) are associated with lower levels of broadband access. However, because the functional form of the model is non-linear I hold off on interpretation of the effects. The main point to take-away here is that the loans are not significant. To check if this is a suitable fit of a model, I turn to a histogram of fitted values and Q-Q plot for the model with year fixed effects:
+
+```{r}
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(fitted(poist), main = "Histogram of Fitted Values", xlab = "Predicted Values")
+qqnorm(residuals(poist, type="deviance"))
+qqline(residuals(poist, type="deviance"), col = 2, lwd = 2, lty = 2)
+```
+
+Visual inspection of the fit indicates use of a count model is superior to the previous panel regression. The Fitted Values range versus actual provider counts:
+
+```{r}
+summary(fitted(poist))
+summary(data$Prov_num)
+```
+
+So there is still a bit of a right-skew, but the fit appears to match well. I take this as strong evidence that a count model should be used here as opposed to a least squares panel methods.
+
+### Annual Regression
+
+To further inspect this relationship, the ${Prov}_{z,t}$ has been averaged annually and rounded to be an integer value. This is to be consistent with the basic panel data I performed earlier and for ease of interpretation. There are two models presented: Poisson and Quasi-Poisson. The advantage of the Quasi-Poisson model is that the variance is not restricted to be equal to the mean of the distribution as the Poisson regression does:
+
+```{r Annual}
+<<Annual>>
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(fitted(pois1), main = "Poisson", xlab = "Predicted Values")
+qqnorm(residuals(pois1, type="deviance"))
+qqline(residuals(pois1, type="deviance"), col = 2, lwd = 2, lty = 2)
+
+par(mfrow = c(1, 2)) # Changing PLOT SETTINGS
+hist(fitted(qpois1), main = "Quasi-Poisson", xlab = "Predicted Values")
+qqnorm(residuals(qpois1, type="deviance"))
+qqline(residuals(qpois1, type="deviance"), col = 2, lwd = 2, lty = 2)
+
+```
+
+**WOW**, the residual fit for these models is vastly improved. The Quasi-Poisson model appears to be a better fit as the dispersion parameter is significant and fits the data much better as the implied variance in the predicted values is closer to the sample variance. To note, the point estimates are identical and only the standard errors differ between the two models.
+
+From a policy perspective, it appears that the loan program was not effective as we cannot find a significant effect in the regression. Keep in mind that there is likely attenuation bias due to imprecise measurement of the dependent variable of interest and this is only the beginning of modeling. I have yet to disaggregate the loan variables or interact them with their intended beneficiaries: rural areas. We know that the loans were disbursed to both metro and rural regions, which may muddy the waters of finding this as a program that can increase access for under-served and remote areas. Further, these loans were not exclusive to broadband deployment either.
+
+A few more checks of the model is necessary before I can start fidgeting around with interaction terms of the loans. For one, serial correlation appears to still be a problem. We can see this through a correlation matrix of residuals across years for both the Poisson and Quasi-Poisson Regressions:
+
+```{r Residuals}
+<<Residuals>>
+
+dx  <- split(d$pois1r, d$year)
+dxx <- do.call(cbind, dx)
+kable(cor(dxx), caption = "Poisson")
+  
+dx  <- split(d$qpois1r, d$year)
+dxx <- do.call(cbind, dx)
+kable(cor(dxx), caption = "Quasi-Poisson")
+```
+
+This is not good, although the typical applied remedy is to simply use robust standard errors in significance testing. The `vcovHAC` function in `R` allows for heteroskedastic and autocorrelation consistent covariance matrix estimation. Applying this to our previous models would yield different standard errors, although this does not change our qualitative understanding of the loan program so far. Because this is a computationally intensive process (and has yet to converge for any models so far), I will suppress the output for the time being. However, I will present the `vcovHC` results though which are the White standard errors:
+
+```{r vcovHC}
+library(sandwich)
+library(lmtest)
+coeftest(pois1, function(x) vcovHC(x, type = "HC0"))
+```
+
+This is slightly puzzling that the standard errors are generally smaller in this setting. This gives me pause as to how to approach the calculation of standard errors in this setting...
+
+```{r vcovHAC}
+#library(sandwich)
+#library(lmtest)
+#coeftest(pois1, vcovHAC)
+```
+
+### Extension
+How about let's do the natural extension to this model to see if the impact of the loans varied across the **rural** counties. Since the Quasi-Poisson model is less restrictive, that will be the estimation technique I will use. The specific regression formula can be seen at the top of the output:
+
+```{r Rural}
+qpois  <- glm(round(Prov_num) ~ iloans + iloans:ruc + log(est) + log(Pop_IRS) + logINC + tri + ruc + factor(year), family = quasipoisson, data = pdata)
+summary(qpois)
+```
+
+Interesting, although not necessarily unexpected. One thing we did here is split up a heterogeneous group into three fairly homogeneous groups in order to evaluate the effects. In this setting, the loan program applied to metro counties actually suppressed broadband providers across this time at `r format(coef(qpois)["iloans"], digits = 3)`, but loans applied to rural adjacent counties would be a combination of three parameters. The sum of these parameters is `r sum(coef(qpois)[c("iloans", "rucadj", "iloans:rucadj")])` and for the rural nonadjacent counties it is `r sum(coef(qpois)[c("iloans", "rucnonadj", "iloans:rucnonadj")])`. In order to test the significance of these effects, we can construct a Chisq test to test whether the summation of the respective variables are different from zero:
+
+```{r Significance}
+library(car)
+linearHypothesis(qpois, "1*iloans + 1*rucadj + 1*iloans:rucadj = 0")
+linearHypothesis(qpois, "1*iloans + 1*rucnonadj + 1*iloans:rucnonadj = 0")
+```
+
+We can see that the effects are both statistically significant, which gives a bit of a puzzling result on the loans effectiveness. Rural areas see a significant increase in availability of broadband via both the Pilot and Farm Bill loan programs.
+
+However, the urban areas that received the loans actually saw a decrease in availability on average. There is potential that some (potentially unobservable) factor is retarding the growth in broadband for these areas that I am not controlling for. If this is the case, there is little I can do to further examine this issue. But one might also consider asking the question of why these particular loans were given out in the first place. These areas were not the targetted recepients of the loans and one interpretation of this is that loans to these areas would not be expected to see increases. There is potential for fraud, but this is equally untestable as is an unobservable driving the results.
+
+Here is a regression with the program broken into the Pilot and the Farm Bill program:
+
+```{r Loans}
+qpois  <- glm(round(Prov_num) ~ ipilot + icur + log(est) + log(Pop_IRS) + logINC + tri + ruc + factor(year), family = quasipoisson, data = pdata)
+summary(qpois)
+```
+
+In this setting, we see that the pilot loan was statistically significant with a coefficient estimate of `r format(coef(qpois)["ipilot"], digits = 3)` while the Farm Bill program is not statistically different from zero with its coefficient of `r format(coef(qpois)["icur"], digits = 3)`. This appears to give evidence that the loans take time to be effective. The Pilot loans were disbursed in 2002 while the panel goes up to 2008, which appears to give adequate time for the programs to contribute towards an increase in availability. On the other hand, the Farm Bill loans were disbursed in 2005 and 2006.
+
+And finally, a cumbersome interaction between the Pilot/Farm Bill with the Rural-Urban Continuum:
+
+```{r Rural Loans}
+qpois  <- glm(round(Prov_num) ~ ipilot + icur + ipilot:ruc + icur:ruc + log(est) + log(Pop_IRS) + logINC + tri + ruc + factor(year), family = quasipoisson, data = pdata)
+summary(qpois)
+```
+
+Under this regression, we can see that the Pilot program appears to have benefited the metro areas. The rural adjacent areas receiving the Pilot loans appeared to have a decrease in availability with an associated coefficient of 
+`r sum(coef(qpois)[c("ipilot", "rucadj", "ipilot:rucadj")])`. The rural nonadjacent areas did appear to benefit with an associated coefficient of `r sum(coef(qpois)[c("ipilot", "rucnonadj", "ipilot:rucnonadj")])`. However, these are not statistically different from zero:
+
+```{r Significance2}
+linearHypothesis(qpois, "1*ipilot + 1*rucadj + 1*ipilot:rucadj = 0")
+linearHypothesis(qpois, "1*ipilot + 1*rucnonadj + 1*ipilot:rucnonadj = 0")
+```
+
+If we extend this to the Farm Bill loans, we see that the metro areas had a statistically significant decrease in availability. The rural areas appear to have a statistically significant increase of `r sum(coef(qpois)[c("icur", "rucadj", "icur:rucadj")])` for adjacent areas and `r sum(coef(qpois)[c("icur", "rucnonadj", "icur:rucnonadj")])` for nonadjacent areas.
+
+```{r Significance3}
+linearHypothesis(qpois, "1*icur + 1*rucadj + 1*icur:rucadj = 0")
+linearHypothesis(qpois, "1*icur + 1*rucnonadj + 1*icur:rucnonadj = 0")
+```
+
+Cool stuff. I imagine this is something that I could run with and have the first part of this chapter effectively done except for one other problem ....
