@@ -21,8 +21,8 @@ rm(All)
 
 data %>%
   filter(year == 2008, iloans) %>%
-  select(zip, fips, long, lat, metro13, Pilot = ploans, Current = biploans1234,
-         Any = loans) %>%
+  select(zip, fips, long, lat, metro13, Pilot = ploans,
+         `Farm Bill` = biploans1234, Any = loans) %>%
   gather(key, value, -zip, -fips, -long, -lat, -metro13) -> loans
 
 ERS %>%
@@ -71,7 +71,7 @@ usa.plot + geom_polygon(aes(fill = metro03)) +
   scale_fill_manual("County Class",
                     values = c("metro" = "darkkhaki", "nonmetro" = "khaki"),
                     labels = c("Urban", "Rural"), na.value = "blue") +
-  scale_colour_manual("Loan", values = c("Pilot" = "black", "Current" = "red"),
+  scale_colour_manual("Loan", values = c("Pilot" = "black", "Farm Bill" = "red"),
                       na.value = NA) +
   labs(x = "", y = "") +
   guides(colour = guide_legend(override.aes = list(size = 4)),
@@ -95,7 +95,7 @@ usa.plot + geom_polygon(aes(fill = metro03)) +
   scale_fill_manual("County Class",
                     values = c("metro" = "darkkhaki", "nonmetro" = "khaki"),
                     labels = c("Urban", "Rural"), na.value = "blue") +
-  scale_colour_manual("Loan", values = c("Pilot" = "black", "Current" = "red"),
+  scale_colour_manual("Loan", values = c("Pilot" = "black", "Farm Bill" = "red"),
                       na.value = NA) +
   labs(x = "", y = "") +
   guides(colour = guide_legend(override.aes = list(size = 4)),

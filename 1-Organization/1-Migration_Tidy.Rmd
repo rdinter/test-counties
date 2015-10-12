@@ -78,6 +78,8 @@ This change in data definitions would imply that the values before 2013 with Ret
 
 While there may be some interesting research ideas with suppressed data, the easiest solution here is to simply drop the suppressed as there are no more than 5\% of all values suppressed. We also see that the minimum threshold for reporting a migration connection (10 filers) has remained around 7,000 observations which is approximately 7\% of all reported connections.
 
+The [IRS documents](http://www.irs.gov/pub/irs-soi/soi-a-inmig-id1509.pdf) the changes made in the 2010--11 and 2013--14 reporting procedures on their website.
+
 ## Corrections
 The data are not clean or tidy, for one there is a concern of some malfunction on the IRS part because of the large negative `AGI` values above. There is no correction for potentially erroneously entered/calculated data except to flag outliers. But there are other problems which can be corrected. For instance, the FIPS codes for special flows changes across time. These special flows are used to indicate a county to larger region or larger region to county relationship (i.e. Total Migrants into Wake County). The IRS is not consistent across years or within years for this distinction. Cross-checks need to be performed to ensure that all data are consistent.
 

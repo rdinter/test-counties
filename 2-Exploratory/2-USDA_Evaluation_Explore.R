@@ -47,7 +47,7 @@ sc2 + stat_smooth() + theme_minimal() +
 ggsave(paste0(localDir, "/ZIP_no_bb_down.png"), width = 10, height = 7.5)
 
 # When did the loans occur:
-ltime <- data.frame(loan = c("Pilot", "Current"),
+ltime <- data.frame(loan = c("Pilot", "Farm Bill"),
                     time = as.numeric(as.Date(c("2001-12-31", "2003-12-31"))),
                     year = c(2002, 2004),
                     disp = c("black", "red"))
@@ -57,7 +57,7 @@ data %>%
   distinct(zip) %>%
   summarise(loans   = sum(loans),
             pilot   = sum(ploans),
-            current = sum(biploans1234)) -> ggloans
+            `Farm Bill` = sum(biploans1234)) -> ggloans
 ggplot(ggloans, aes(x = year, y = loans)) + geom_line() + theme_minimal() +
   scale_y_continuous(breaks = seq(0, 3000, 500)) +
   geom_vline(xintercept=as.numeric(as.Date("2001-12-31")),
@@ -92,12 +92,12 @@ data %>%
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
             TRI = mean(tri), TRISD = sd(tri)) -> t2
-# "Current Loans"
+# "Farm Bill Loans"
 data %>%
   group_by(year) %>%
   filter(ibip1234) %>%
   distinct(zip) %>%
-  summarize(Category = "Current", n = n(),
+  summarize(Category = "Farm Bill", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
@@ -148,7 +148,7 @@ data %>%
   filter(ibip1234) %>%
   select(zip, time, Prov_hist, est, emp_) %>%
   gather(key, value, Prov_hist, est, emp_) -> all3
-all3$class <- "Current"
+all3$class <- "Farm Bill"
 data %>%
   filter(!ipilot | !ibip1234) %>%
   select(zip, time, Prov_hist, est, emp_) %>%
@@ -197,7 +197,7 @@ fipdata <- data %>%
   group_by(fips, year) %>%
   summarise(n = n(), PopIRS = mean(Pop_IRS), PopPOV = mean(POP_POV),
          HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
-         Area = mean(AREA), Pilot = sum(ploans), Current = sum(biploans1234),
+         Area = mean(AREA), Pilot = sum(ploans), `Farm Bill` = sum(biploans1234),
          Prov = sum(Prov_hist)/n, ipilot = !all(!ipilot),
          ibip1234 = !all(!ibip1234))
 
@@ -210,7 +210,7 @@ fipdata %>%
   filter(ibip1234) %>%
   select(fips, year, PopIRS, HHIncIRS, Prov) %>%
   gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall3
-fipall3$class <- "Current"
+fipall3$class <- "Farm Bill"
 fipdata %>%
   filter(!ipilot | !ibip1234) %>%
   select(fips, year, PopIRS, HHIncIRS, Prov) %>%

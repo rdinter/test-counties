@@ -70,7 +70,7 @@ ggsave(paste0(localDir, "/ZIP_no_bb_down.png"), width = 10, height = 7.5)
 
 # ---- Loan Time ----------------------------------------------------------
 # When did the loans occur:
-ltime <- data.frame(loan = c("Pilot", "Current"),
+ltime <- data.frame(loan = c("Pilot", "Farm Bill"),
                     time = as.numeric(as.Date(c("2001-12-31", "2003-12-31"))),
                     year = c(2002, 2004),
                     disp = c("black", "red"))
@@ -80,7 +80,7 @@ data %>%
   distinct(zip) %>%
   summarise(loans   = sum(loans),
             pilot   = sum(ploans),
-            current = sum(biploans1234)) -> ggloans
+            `Farm Bill` = sum(biploans1234)) -> ggloans
 ggplot(ggloans, aes(x = year, y = loans)) + geom_line() + theme_minimal() +
   scale_y_continuous(breaks = seq(0, 3000, 500)) +
   geom_vline(xintercept = 2002, color = "black", linetype = "longdash") +
@@ -113,12 +113,12 @@ data %>%
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
             TRI = mean(tri), TRISD = sd(tri)) -> t2
-# "Current Loans"
+# "Farm Bill Loans"
 data %>%
   group_by(year) %>%
   filter(ibip1234) %>%
   distinct(zip) %>%
-  summarise(Category = "Current", n = n(),
+  summarise(Category = "Farm Bill", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
@@ -180,7 +180,7 @@ data %>%
   filter(ibip1234) %>%
   select(zip, time, Prov_hist, est, emp_) %>%
   gather(key, value, Prov_hist, est, emp_) -> all3
-all3$class <- "Current"
+all3$class <- "Farm Bill"
 data %>%
   filter(!ipilot | !ibip1234) %>%
   select(zip, time, Prov_hist, est, emp_) %>%
@@ -188,8 +188,8 @@ data %>%
 all4$class <- "No Loan"
 test <- bind_rows(all2, all3, all4)
 
-test$class <- factor(test$class, levels = c("No Loan", "Pilot", "Current"),
-                     labels = c("None", "Pilot", "Current"))
+test$class <- factor(test$class, levels = c("No Loan", "Pilot", "Farm Bill"),
+                     labels = c("None", "Pilot", "Farm Bill"))
 levels(test$key) <- c("Providers", "Establishments", "Employed")
 test$key <- factor(test$key, levels=rev(levels(test$key)))
 
@@ -240,7 +240,7 @@ fipdata <- data %>%
   summarise(n = n(), PopIRS = mean(Pop_IRS), PopPOV = mean(POP_POV),
          HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
          HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS), Area = mean(AREA),
-         Pilot = sum(ploans), Current = sum(biploans1234), 
+         Pilot = sum(ploans), `Farm Bill` = sum(biploans1234), 
          Prov = sum(Prov_hist)/n, ipilot = !all(!ipilot),
          ibip1234 = !all(!ibip1234), iloans = !all(!iloans))
 
@@ -262,12 +262,12 @@ fipdata %>%
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
             HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
             HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t1
-# "Current Loans"
+# "Farm Bill Loans"
 fipdata %>%
   group_by(year) %>%
   filter(ibip1234) %>%
   distinct(fips) %>%
-  summarise(Category = "Current", n = n(),
+  summarise(Category = "Farm Bill", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
             HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
@@ -307,7 +307,7 @@ fipdata %>%
   filter(ibip1234) %>%
   select(fips, year, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
   gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall3
-fipall3$class <- "Current"
+fipall3$class <- "Farm Bill"
 fipdata %>%
   filter(!ipilot | !ibip1234) %>%
   select(fips, year, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
@@ -315,8 +315,8 @@ fipdata %>%
 fipall4$class <- "No Loan"
 fipall <- bind_rows(fipall2, fipall3, fipall4)
 
-fipall$class <- factor(fipall$class, levels = c("No Loan", "Pilot", "Current"),
-                       labels = c("None", "Pilot", "Current"))
+fipall$class <- factor(fipall$class, levels=c("No Loan", "Pilot", "Farm Bill"),
+                       labels = c("None", "Pilot", "Farm Bill"))
 levels(fipall$key) <- c("Population", "Mean Income", "Mean Wages", "Providers")
 
 ggplot(fipall, aes(x = year, y = value, colour = class, group = class)) +
@@ -334,11 +334,11 @@ ggsave(paste0(localDir, "/Fips_attributes.png"), width = 10, height = 7.5)
 
 # ---- RUC ----------------------------------------------------------------
 data$ruc    <- factor(data$ruc03)
-levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
-                         "nonadj" = c(5,7,9))
+levels(data$ruc) <- list("Urban" = 1:3, "Rural-Adjacent" = c(4,6,8),
+                         "Rural-Nonadjacent" = c(5,7,9))
 data$loantype <- ifelse(data$iloans, "YES", "NONE")
 data$loantype <- ifelse(data$ipilot, "PILOT", data$loantype)
-data$loantype <- ifelse(data$ibip1234, "CURRENT", data$loantype)
+data$loantype <- ifelse(data$ibip1234, "FARM BILL", data$loantype)
 data$loantype <- factor(data$loantype)
 
 
@@ -367,9 +367,9 @@ RUC %>%
 # ----
 # RUC %>% 
 #   group_by(ruc) %>% 
-#   summarise(CURRENT = sprintf("%.1f %%", 100*sum(loantype == "CURRENT") / n()),
-#             NONE    = sprintf("%.1f %%", 100*sum(loantype == "NONE") / n()),
-#             PILOT   = sprintf("%.1f %%", 100*sum(loantype == "PILOT") / n())) %>% 
+#   summarise(`FARM BILL`=sprintf("%.1f %%",100*sum(loantype=="FARM BILL")/n()),
+#             NONE   = sprintf("%.1f %%",100*sum(loantype == "NONE")/n()),
+#             PILOT  = sprintf("%.1f %%",100*sum(loantype == "PILOT")/n())) %>% 
 #   knitr::kable(caption = "")
 
 RUC %>% 
@@ -386,9 +386,11 @@ ggplot(RUC, aes(x = time, y = value, colour = ruc, group = ruc)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "smooth") +
   scale_y_continuous(labels = comma) +
   guides(color = guide_legend(title = "County Class")) +
-  theme_minimal() + labs(x = "Number of Providers", y = "") +
+  theme_minimal() + labs(x = "", y = "Mean Number of Providers") +
   theme(legend.position = "bottom",
         strip.text.y = element_text(size = 10, face = "bold"))
+ggsave(paste0(localDir, "/Providers_zip_time_RUC.png"),
+       width = 10, height = 7.5)
 
 # ----
 rm(list=ls())

@@ -29,13 +29,13 @@ There is a clear diffusion of broadband access from the end of 1999 through 2008
 <<Zip time>>
 ```
 
-This time period is typically described as the diffusion of broadband, which follows the S-curve that most other technologies are familiar with. We can partially observe this by looking at the proportion of zip codes with broadband access over this time instead of the number of providers:
+This time period is typically described as the diffusion of broadband, which follows the S-curve that most other technologies are familiar with. Adoptions references the use of a technology while the data are availability of broadband within a zip code. We can partially observe the S-curve by looking at the proportion of zip codes **without** broadband access across this time:
 
-```{r Zip Uptake}
-<<Zip Uptake>>
+```{r Zip Downtake}
+<<Zip Downtake>>
 ```
 
-In one sense, these zip codes can be described as broadband adopters although this particular measure is of availability and not necessarily use of broadband.
+In one sense, these zip codes can be described as broadband adopters although this particular measure is of availability and not necessarily use of broadband. The [FCC did not track](https://transition.fcc.gov/wcb/iatd/comp.html) the percentage of subscribers to broadband in a geographical area [until the second half of 2008](https://www.fcc.gov/encyclopedia/form-477-census-tract-data-internet-access-services). At that time, the FCC also changed the reporting unit from zip code level data to census tract level data because the latter is a consistent polygon while the former may change across time.
 
 ## Rural-Urban Continuum Descriptions
 ```{r ruc, include=FALSE}

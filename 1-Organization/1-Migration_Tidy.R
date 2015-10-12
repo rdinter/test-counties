@@ -283,15 +283,15 @@ allouttotal <- allout %>%
   rename(fips = ofips, OUT_Return = Return_Num, OUT_Exmpt = Exmpt_Num,
          OUT_AGI = Aggr_AGI)
 
-data <- full_join(allintotal, allouttotal)
-data <- data %>% 
+aggdata <- full_join(allintotal, allouttotal)
+aggdata <- aggdata %>% 
   select(-dfips, -ofips) %>% 
   mutate(NET_Return = IN_Return - OUT_Return,
          NET_Exmpt = IN_Exmpt - OUT_Exmpt,
          NET_AGI = IN_AGI - OUT_AGI)
 
-save(data, file = paste0(localDir, "/netmigration.Rda"))
-write_csv(data, paste0(localDir, "/netmigration.csv"))
+save(aggdata, file = paste0(localDir, "/netmigration.Rda"))
+write_csv(aggdata, paste0(localDir, "/netmigration.csv"))
 rm(allintotal, allouttotal)
 
 # ---- cty2cty ------------------------------------------------------------
@@ -375,10 +375,11 @@ ctycty <- ctycty %>%
 write_csv(ctycty, paste0(localDir, "/ctycty.csv"))
 save(ctycty, file = paste0(localDir, "/ctycty.Rda"))
 
-
+rm(allin, allout, coords, data, incty, outcty)
 # ---- Controls -----------------------------------------------------------
+load("0-Data/IRS/CTYPop.Rda")
 
-
+# Add in controls...
 
 rm(list = ls())
 
