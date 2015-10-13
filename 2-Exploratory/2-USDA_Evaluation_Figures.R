@@ -374,10 +374,10 @@ RUC %>%
 
 RUC %>% 
   group_by(loantype) %>% 
-  summarise(Metro = sprintf("%.1f %%", 100*sum(ruc == "metro") / n()),
-            `Rural Adjacent` = sprintf("%.1f %%", 100*sum(ruc == "adj") / n()),
+  summarise(Metro = sprintf("%.1f %%", 100*sum(ruc == "Urban") / n()),
+            `Rural Adjacent` = sprintf("%.1f %%", 100*sum(ruc == "Rural-Adjacent") / n()),
             `Rural Non-Adjacent` = sprintf("%.1f %%",
-                                           100*sum(ruc == "nonadj") / n())) %>% 
+                                           100*sum(ruc == "Rural-Nonadjacent") / n())) %>% 
   knitr::kable(caption = "County Class by Loan Type")
 
 # ---- RUC graph ----------------------------------------------------------
