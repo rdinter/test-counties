@@ -5,14 +5,14 @@
 print(paste0("Started 0-FCC_99_08 at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(readr)
+library(tidyr)
 
 
 # Create a directory for the data
 localDir <- "0-Data/FCC"
-data_source <- paste0(localDir, "/Raw")
+data_source <- paste0(localDir, "/Raw/Providers")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
 
@@ -33,7 +33,7 @@ data %>%
   spread(time, Prov) %>%
   distinct(zip) -> data2
 
-suppressMessages(library(zoo))
+library(zoo)
 
 data2 %>%
   gather(time, Prov, `1999-12-31`:`2008-06-30`) %>%
