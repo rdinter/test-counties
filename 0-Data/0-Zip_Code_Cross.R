@@ -5,9 +5,9 @@
 print(paste0("Started 0-Zip_Code_Cross at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
-suppressMessages(library(sp))
+library(dplyr)
+library(readr)
+library(sp)
 
 # Create a directory for the data
 localDir   <- "0-Data/Zip_Code_Cross"

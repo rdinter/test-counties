@@ -5,11 +5,11 @@
 print(paste0("Started 0-ERS at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
-suppressMessages(library(readxl))
-suppressMessages(library(tidyr))
-suppressMessages(library(stringr))
+library(dplyr)
+library(readr)
+library(readxl)
+library(tidyr)
+library(stringr)
 source("0-Data/0-functions.R")
 
 # Create a directory for the data

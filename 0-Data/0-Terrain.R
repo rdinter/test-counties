@@ -4,9 +4,9 @@
 
 print(paste0("Started 0-Terrain at ", Sys.time()))
 
-suppressMessages(library(raster))
-suppressMessages(library(readr))
-suppressMessages(library(rgdal))
+library(raster)
+library(readr)
+library(rgdal)
 
 # Create a directory for the data
 localDir   <- "0-Data/Terrain"

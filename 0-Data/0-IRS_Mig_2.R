@@ -3,7 +3,7 @@
 print(paste0("Started 0-IRS_Mig_2 at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
+library(dplyr)
 
 # Create a directory for the data
 localDir <- "0-Data/IRS"

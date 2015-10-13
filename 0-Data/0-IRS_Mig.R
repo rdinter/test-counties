@@ -3,11 +3,11 @@
 print(paste0("Started 0-IRS_Mig at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(gdata))
-suppressMessages(library(readxl))
-suppressMessages(library(readr))
-suppressMessages(library(stringr))
+library(dplyr)
+library(gdata)
+library(readxl)
+library(readr)
+library(stringr)
 
 
 #Problem for excel files with "us" from 1998.99 until 2001.2

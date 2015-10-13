@@ -5,9 +5,9 @@ print(paste0("Started 0-Shapefiles at ", Sys.time()))
 options(scipen=999) #Turn off scientific notation for write.csv()
 # require(devtools)
 # install_github("eblondel/cleangeo")
-suppressMessages(library(cleangeo))
-suppressMessages(library(maptools))
-suppressMessages(library(rgdal))
+library(cleangeo)
+library(maptools)
+library(rgdal)
 
 # Read in ZCTA Shapefiles -------------------------------------------------
 

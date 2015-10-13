@@ -6,9 +6,9 @@
 print(paste0("Started 0-CPI at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(readr)
+library(tidyr)
 
 # Create a directory for the data
 localDir <- "0-Data/CPI"

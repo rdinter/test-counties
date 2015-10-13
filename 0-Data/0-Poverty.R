@@ -6,9 +6,9 @@
 print(paste0("Started 0-Poverty at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(readr)
+library(tidyr)
 source("0-Data/0-functions.R")
 
 # Create a directory for the data

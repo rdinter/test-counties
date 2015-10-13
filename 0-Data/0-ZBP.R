@@ -7,8 +7,8 @@
 print(paste0("Started 0-ZBP at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
+library(dplyr)
+library(readr)
 source("0-Data/0-functions.R")
 
 # Create a directory for the data

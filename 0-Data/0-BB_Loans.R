@@ -5,9 +5,9 @@
 print(paste0("Started 0-BB_Loans at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-suppressMessages(library(dplyr))
-suppressMessages(library(readr))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(readr)
+library(tidyr)
 
 # Create a directory for the data
 localDir <- "0-Data/BB_Loans"
@@ -75,7 +75,7 @@ save(bbloan.ex, file = paste0(localDir, "/BBLoans.Rda"))
 
 # Back to 1999 ------------------------------------------------------------
 
-suppressMessages(library(zoo))
+library(zoo) # dplyr updated this in some way ...
 
 # Read in what Ivan has
 pilot      <- read_csv(paste0(data_source, "/zippilotloans.csv"))
