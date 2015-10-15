@@ -2,9 +2,9 @@
 
 print(paste0("Started 2-USDA_Evaluation_Explore at ", Sys.time()))
 
-suppressMessages(library(dplyr))
-suppressMessages(library(ggplot2))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 
 # Create a directory for the data
 localDir <- "2-Exploratory/USDA_Evaluation"
@@ -77,51 +77,56 @@ ggsave(paste0(localDir, "/Loan_award_time.png"), width = 10, height = 7.5)
 data %>%
   group_by(year) %>%
   distinct(zip) %>%
-  summarize(Category = "All Zips", n = n(),
+  summarise(Category = "All Zips", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t1
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t1
 # Any Loans
 data %>%
   group_by(year) %>%
   filter(ipilot | ibip1234) %>%
   distinct(zip) %>%
-  summarize(Category = "Any", n = n(),
+  summarise(Category = "Any", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t2
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t2
 # "Farm Bill Loans"
 data %>%
   group_by(year) %>%
   filter(ibip1234) %>%
   distinct(zip) %>%
-  summarize(Category = "Farm Bill", n = n(),
+  summarise(Category = "Farm Bill", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t3
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t3
 # Pilot Loans
 data %>%
   group_by(year) %>%
   filter(ipilot) %>%
   distinct(zip) %>%
-  summarize(Category = "Pilot", n = n(),
+  summarise(Category = "Pilot", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t4
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t4
 # No Loans
 data %>%
   group_by(year) %>%
   filter(!ipilot | !ibip1234) %>%
   distinct(zip) %>%
-  summarize(Category = "ZNo Loans", n = n(),
+  summarise(Category = "ZNo Loans", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t5
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t5
 ta <- bind_rows(t1, t3, t4)
 ta <- arrange(ta, year, Category)
 write.csv(ta, paste0(localDir, "/Zip_Stats.csv"), row.names = F)
@@ -190,14 +195,15 @@ data %>%
             HHInc = mean(MEDHHINC_R), HHIncSD = sd(MEDHHINC_R),
             HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
             HHIncIRSSD = sd(AGI_IRS_R*1000 / HH_IRS),
-            Area = mean(AREA), AreaSD = sd(AREA))
+            Area_cty = mean(AREA_cty), AreaSD = sd(AREA_cty))
 
 # Try this with a ggplot2 description...
 fipdata <- data %>%
   group_by(fips, year) %>%
   summarise(n = n(), PopIRS = mean(Pop_IRS), PopPOV = mean(POP_POV),
          HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
-         Area = mean(AREA), Pilot = sum(ploans), `Farm Bill` = sum(biploans1234),
+         Area = mean(AREA_cty), Pilot = sum(ploans),
+         `Farm Bill` = sum(biploans1234),
          Prov = sum(Prov_hist)/n, ipilot = !all(!ipilot),
          ibip1234 = !all(!ibip1234))
 

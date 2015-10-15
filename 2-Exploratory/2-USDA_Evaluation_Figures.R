@@ -4,11 +4,11 @@
 
 print(paste0("Started 2-USDA_Evaluation_Figures at ", Sys.time()))
 
-suppressMessages(library(dplyr))
-suppressMessages(library(ggplot2))
-suppressMessages(library(scales))
-suppressMessages(library(stargazer))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(stargazer)
+library(tidyr)
 
 # Create a directory for the data
 localDir <- "2-Exploratory/USDA_Evaluation"
@@ -102,7 +102,8 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t1
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t1
 # Any Loans
 data %>%
   group_by(year) %>%
@@ -112,7 +113,8 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t2
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t2
 # "Farm Bill Loans"
 data %>%
   group_by(year) %>%
@@ -122,7 +124,8 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t3
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t3
 # Pilot Loans
 data %>%
   group_by(year) %>%
@@ -132,7 +135,8 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t4
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t4
 # No Loans
 data %>%
   group_by(year) %>%
@@ -142,7 +146,8 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
-            TRI = mean(tri), TRISD = sd(tri)) -> t5
+            TRI = mean(tri), TRISD = sd(tri),
+            AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t5
 ta  <- bind_rows(t1, t3, t4)
 ta  <- arrange(ta, year, Category)
 pta <- data.frame(year = as.character(ta$year))
@@ -154,7 +159,8 @@ pta$Providers <- paste0(pta$Prov, " (", pta$ProvSD, ")")
 pta$Establishments <- paste0(pta$Est, " (", pta$EstSD, ")")
 pta$Employed <- paste0(pta$Emp, " (", pta$EmpSD, ")")
 pta$TRI <- paste0(pta$TRI, " (", pta$TRISD, ")")
-pta <- select(pta, year:n, Providers, Establishments, Employed, TRI)
+pta$AREA <- paste0(pta$AREA, " (", pta$AREASD, ")")
+pta <- select(pta, year:n, Providers, Establishments, Employed, TRI, AREA)
 
 write.csv(pta, paste0(localDir, "/Zip_Stats.csv"), row.names = F)
 stargazer(pta, summary = F, rownames = F)
@@ -232,14 +238,14 @@ rm(access, all, all1, all2, all3, all4, test)
 #             HHIncIRSSD = sd(AGI_IRS_R*1000 / HH_IRS),
 #             HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS),
 #             HHWageIRSSD = sd(Wages_IRS_R*1000 / HH_IRS),
-#             Area = mean(AREA), AreaSD = sd(AREA)) %>% View
+#             Area_cty = mean(AREA_cty), AreaSD = sd(AREA_cty)) %>% View
 
 # Try this with a ggplot2 description...
 fipdata <- data %>%
   group_by(fips, year) %>%
   summarise(n = n(), PopIRS = mean(Pop_IRS), PopPOV = mean(POP_POV),
          HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
-         HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS), Area = mean(AREA),
+         HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS), Area = mean(AREA_cty),
          Pilot = sum(ploans), `Farm Bill` = sum(biploans1234), 
          Prov = sum(Prov_hist)/n, ipilot = !all(!ipilot),
          ibip1234 = !all(!ibip1234), iloans = !all(!iloans))

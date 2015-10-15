@@ -15,7 +15,7 @@ data %>%
   mutate(HHINC_IRS_R = AGI_IRS_R*1000 / HH_IRS,
          HHWAGE_IRS_R = Wages_IRS_R*1000 / HH_IRS) %>%
   select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
-         ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
+         ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA_cty, AREA_zcta,
          loans, ploans, biploans1234) %>%
   summarise_each(funs(mean)) -> data
 data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))

@@ -2,10 +2,10 @@
 
 print(paste0("Started 1-USDA_Evaluation_Tidy at ", Sys.time()))
 
-suppressMessages(library(dplyr))
-suppressMessages(library(maptools))
-suppressMessages(library(readr))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(maptools)
+library(readr)
+library(tidyr)
 
 # Create a directory for the data
 localDir <- "1-Organization/USDA_Evaluation"
@@ -166,7 +166,7 @@ bband %>%
 
 write_csv(bband, paste0(localDir, "/broadbandmain.csv"))
 save(bband, file = paste0(localDir, "/broadbandmain.Rda"))
-rm(badzips, check, check5, correct, goodloans, lzips, All, FCC, bucket,
+rm(badzips, check, check5, correct, goodloans, lzips, FCC, bucket,
    bbloan.ex, fips, fips1, fips2, loans, zctap)
 
 # Adding ------------------------------------------------------------------
@@ -183,6 +183,11 @@ coords        <- as.data.frame(coordinates(zcta))
 names(coords) <- c("long", "lat")
 coords$zip    <- as.numeric(row.names(coords))
 data          <- left_join(data, coords)
+
+# Add in the county area
+data          <- left_join(data, All@data[, c("FIPS", "AREA_cty", "PERIMETER")],
+                           by = c("fips" = "FIPS"))
+rm(All)
 
 load("0-Data/ZBP/ZBPfull.Rda")
 

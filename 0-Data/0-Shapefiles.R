@@ -72,6 +72,9 @@ aea.proj  <- "+proj=longlat"
 zcta      <- spTransform(zcta,CRS(aea.proj))
 zctap     <- spTransform(zctap,CRS(aea.proj))
 
+# Rename the area so that I know it is the zip code area
+names(zcta)[5]  <- "AREA_zcta"
+names(zctap)[5] <- "AREA_zctap"
 
 save(zcta,  file = paste0(localDir, "/zcta2004.Rda"))
 save(zctap, file = paste0(localDir, "/zctap2004.Rda"))
@@ -90,6 +93,7 @@ untar(file, exdir = tempDir)
 # Raw File
 all          <- readOGR(tempDir, "countyp020", p4s = "+proj=longlat")
 all$FIPS     <- as.numeric(as.character(all$FIPS))
+names(all)[8]<- "AREA_cty"
 
 # Unmerged
 usa          <- subset(all, FIPS < 57000)
