@@ -21,33 +21,25 @@ vcovDC <- function(x, ...){
 localDir <- "3-Basic_Modeling/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
-# sink(paste0(localDir, "/3-USDA_Evaluation_Basic.txt"))
+sink(paste0(localDir, "/3-USDA_Evaluation_Basic.txt"))
 
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
 
-data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
-data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
-
-data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
-data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
-data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
 data$iloans <- 1*(data$loans > 0)
 data$ipilot <- 1*(data$ploans > 0)
 data$icur   <- 1*(data$biploans1234 > 0)
-data$ruc    <- factor(data$ruc03)
-levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
-                         "nonadj" = c(5,7,9))
 
-data %>%
-  group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
-  dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
-                logINC, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
-                loans, ploans, biploans1234, iloans, ipilot, icur, long, lat) %>%
-  summarise_each(funs(mean)) -> pdata
-
-pdata  <- pdata.frame(pdata, index = c("zip", "year"))
-pdata1 <- pdata.frame(data, index = c("zip", "time"))
+# data %>%
+#   group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
+#   dplyr::select(Prov_alt, Prov_num, Prov_hist, emp:emp_, Pop_IRS, HHINC_IRS_R,
+#                 HHWAGE_IRS_R, logINC, ap_R, qp1_R, POV_ALL_P, roughness,
+#                 slope, tri, AREA_cty, AREA_zcta, loans, ploans, biploans1234,
+#                 iloans, ipilot, icur, long, lat) %>%
+#   summarise_each(funs(mean)) -> pdata
+# 
+# pdata <- pdata.frame(pdata, index = c("zip", "year"))
+pdata <- pdata.frame(data, index = c("zip", "time"))
 
 #Extremely nonlinear in establishment and population
 # http://www.princeton.edu/~otorres/Panel101R.pdf
@@ -55,49 +47,62 @@ pdata1 <- pdata.frame(data, index = c("zip", "time"))
 # ---- Pooled -------------------------------------------------------------
 
 pool1  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +
-                ruc, pdata, model = "pooling")
+                ruc + poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) +
+                I(est / AREA_zcta), pdata, model = "pooling")
 summary(pool1)
 
 # ---- Fixed --------------------------------------------------------------
 
-p1  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC,
+p1  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
+             I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "within")
 summary(p1)
 
-p1t <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc,
+p1t <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+             poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "within", effect = "time")
 summary(p1t)
 
-p12 <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC,
+p12 <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
+             I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "within", effect = "twoways")
 summary(p12)
 
-p1d <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC,
+p1d <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
+             I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "fd")
 summary(p1d)
 
 # ---- Between ------------------------------------------------------------
 
-p1b  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc,
+p1b  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+              poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
             pdata, model = "between")
 summary(p1b)
-
+# ----
+library(stargazer)
+stargazer(pool1, p1, p1t, p12, p1d, title = "Fixed Effects",
+          out = paste0(localDir, "/static_panel_fe.txt"))
 
 # ---- Random -------------------------------------------------------------
 
-r1  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc,
+r1  <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+             poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "random")
 summary(r1)
 
-r1t <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc,
+r1t <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+             poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "random", effect = "time")
 summary(r1t)
 
-r12 <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc,
+r12 <- plm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+             poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
            pdata, model = "random", effect = "twoways")
 summary(r12)
-
-
+# ----
+stargazer(r1, r1t, r12, title = "Random Effects",
+          out = paste0(localDir, "/static_panel_re.txt"))
 # ---- Tests --------------------------------------------------------------
 # Hausman
 phtest(p1, r1)
@@ -145,19 +150,24 @@ pbgtest(r12)
 # ---- Dynamic ------------------------------------------------------------
 
 dpls <- plm(Prov_num ~ lag(Prov_num, 1) + iloans + log(est) + log(Pop_IRS) +
-              logINC, pdata, model = "within", index = c("zip", "year"))
+              logINC + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
+            pdata, model = "within", index = c("zip", "time"))
 summary(dpls)
 
 dp1 <- pgmm(Prov_num ~ lag(Prov_num, 1) + iloans + log(est) + log(Pop_IRS) +
-              logINC | lag(Prov_num, 2:99) + tri, pdata,
-            index = c("zip", "year"))
+              logINC + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) | 
+              lag(Prov_num, 2:99) + tri, pdata,
+            index = c("zip", "time"))
 summary(dp1)
 
 dp2 <- pgmm(Prov_num ~ lag(Prov_num, 1) + iloans + log(est) + log(Pop_IRS) +
-              logINC | lag(Prov_num, 2:99) + tri, pdata, effect = "individual",
-            index = c("zip", "year"))
+              logINC + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta)|
+              lag(Prov_num, 2:99) + tri, pdata, effect = "individual",
+            index = c("zip", "time"))
 summary(dp2)
-
+# ----
+stargazer(dpls, dp1, dp2, title = "Dynamic Panel",
+          out = paste0(localDir, "/dynamic_panel.txt"))
 # 
 # dp1.fitted <- as.vector(dp1$fitted.values)
 # dp1.resid  <- as.vector(unlist(dp1$residuals))
@@ -170,4 +180,4 @@ summary(dp2)
 #rm(list=ls())
 
 print(paste0("Finished 3-USDA_Evaluation_Basic at ", Sys.time()))
-# sink()
+sink()

@@ -18,25 +18,9 @@ localDir <- "4-Advanced_Modeling/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
-
-data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
-data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
-# Uniform distribution for the suppressed providers
-set.seed(324) # Done for pretty histograms
-data$Prov_hist <- ifelse(data$Prov_num == 2,
-                         runif(sum(data$Prov_num == 2), 1, 3.5),
-                         data$Prov_num)
-
-data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
-data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
-data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
 data$iloans <- 1*(data$loans > 0)
 data$ipilot <- 1*(data$ploans > 0)
 data$icur   <- 1*(data$biploans1234 > 0)
-data$ruc    <- factor(data$ruc03)
-levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
-                         "nonadj" = c(5,7,9))
-
 # data %>%
 #   group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
 #   dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
@@ -49,12 +33,14 @@ levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
 
 # ---- Biannual -----------------------------------------------------------
 
-pois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
-              tri + ruc, family = poisson, data = data)
+pois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+              poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
+            family = poisson, data = data)
 summary(pois)
 
-poist <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
-               tri + ruc + factor(time), family = poisson, data = data)
+poist <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+               poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(time), family = poisson, data = data)
 summary(poist)
 
 # F Test
@@ -63,18 +49,21 @@ rm(pois)
 
 # ---- Quasi --------------------------------------------------------------
 
-qpois  <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
-                tri + ruc + factor(time), family = quasipoisson, data = data)
+qpois  <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+                poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+                factor(time), family = quasipoisson, data = data)
 summary(qpois)
 
-# library(MASS)
-# # negb1 <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
-# #                tri + ruc + factor(time),
-# #              family = negative.binomial(theta = 1), data = data)
-# # summary(negb1)
-# negb  <- glm.nb(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
-#                   tri + ruc + factor(time), data = data)
-# summary(negb)
+library(MASS)
+negb1 <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +
+               ruc + poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) +
+               I(est / AREA_zcta) + 
+               factor(time), family = negative.binomial(theta = 1), data = data)
+summary(negb1)
+negb  <- glm.nb(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +
+                  ruc + poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) +
+                  I(est / AREA_zcta) + factor(time), data = data)
+summary(negb)
 
 
 # ---- Residuals ----------------------------------------------------------
@@ -208,43 +197,46 @@ dev.off()
 
 # ---- Spatial ------------------------------------------------------------
 # 
-# library(MASS)
-# library(spBayes)
-# 
-# # beta.starting <- coefficients(pois1)
-# # beta.tuning   <- t(chol(vcov(pois1)))
-# 
-# # Here posterior inference is based on three MCMC chains each of length 15,000.
-# #  The code to generate the first of these chains is given below.
-# n.batch      <- 300
-# batch.length <- 50
-# n.samples    <- n.batch * batch.length
-# ydata <- subset(data, year == 2006)
-# 
-# pois <- glm(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) + logINC +
-#               tri + ruc, family = "poisson", data = ydata)
-# beta.starting <- coefficients(pois)
-# beta.tuning   <- t(chol(vcov(pois)))
-# 
-# pois.sp.chain.1 <-
-#   spGLM(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) + logINC +
-#           tri + ruc, family = "poisson", data = ydata,
-#         coords = as.matrix(ydata[, c("long", "lat")]),
-#         starting = list(beta = beta.starting,
-#                         phi = 3/0.5,
-#                         sigma.sq = 1,w = 0),
-#         tuning = list(beta = beta.tuning, phi = 0.5,
-#                       sigma.sq = 0.1,w = 0.1),
-#         priors = list("beta.Flat",
-#                       phi.Unif = c(3/1, 3/0.1),
-#                       sigma.sq.IG = c(2, 1)),
-#         amcmc = list(n.batch = n.batch,
-#                      batch.length = batch.length,
-#                      accept.rate = 0.43),
-#         cov.model = "exponential")
-# 
-# samps <- mcmc.list(pois.sp.chain.1$p.beta.theta.samples)
-# plot(samps)
+library(MASS)
+library(spBayes)
+
+# beta.starting <- coefficients(pois1)
+# beta.tuning   <- t(chol(vcov(pois1)))
+
+# Here posterior inference is based on three MCMC chains each of length 15,000.
+#  The code to generate the first of these chains is given below.
+n.batch      <- 300
+batch.length <- 50
+n.samples    <- n.batch * batch.length
+# ydata <- subset(data, time == "2006-12-31")
+ydata <- subset(data, STATE == "MN")
+
+pois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+              poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) + factor(time),
+            family = "poisson", data = ydata)
+beta.starting <- coefficients(pois)
+beta.tuning   <- t(chol(vcov(pois)))
+
+pois.sp.chain.1 <-
+  spGLM(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+          poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) + factor(time),
+        family = "poisson", data = ydata,
+        coords = as.matrix(ydata[, c("long", "lat")]),
+        starting = list(beta = beta.starting,
+                        phi = 3/0.5,
+                        sigma.sq = 1,w = 0),
+        tuning = list(beta = beta.tuning, phi = 0.5,
+                      sigma.sq = 0.1,w = 0.1),
+        priors = list("beta.Flat",
+                      phi.Unif = c(3/1, 3/0.1),
+                      sigma.sq.IG = c(2, 1)),
+        amcmc = list(n.batch = n.batch,
+                     batch.length = batch.length,
+                     accept.rate = 0.43),
+        cov.model = "exponential")
+
+samps <- mcmc.list(pois.sp.chain.1$p.beta.theta.samples)
+plot(samps)
 # 
 # ##### Spatial GLM #####
 # library(MASS)

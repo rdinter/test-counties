@@ -105,7 +105,7 @@ Although the targetted loan recipients were to be underserved areas, it is impor
 As you can see, the Pilot loan recipients tended to have lower levels of employment and establishments across the entire timeframe as compared to national averages. The Current program recipients appear to lag behind national averages initially and then increase above this across the period. I caution that the (bootstrapped) standard errors associated with the average level of employees and establishments would indicate that the Current recipients and National Averages are statistically indistinguishable. This is a good segway for a causal analysis in determining the effectiveness of both loan programs.
 
 ### County Stats
-Zip code level data are hard to find, so to evaluate other economic factors that may have affected broadband diffusion and/or loan effectiveness we need to use county level statistics. I use IRS data to evaluate population, income, and wages. These are used because they reflect measurable economic activity. Population is proxied with number of exemptions by county. Income is proxied with total Adjusted Gross Income for a county divided by the number of households (proxied with returns). And wages utilize the reported wages earned by households.
+Zip code level data are hard to find, so to evaluate other economic factors that may have affected broadband diffusion and/or loan effectiveness we need to use county level statistics. I use IRS data to evaluate population and income. These are used because they reflect measurable economic activity. Population is proxied with number of exemptions by county. Income is proxied with total Adjusted Gross Income for a county divided by the number of households (proxied with returns).
 
 ```{r FIP Data, include=FALSE}
 <<FIP Data>>
@@ -114,7 +114,7 @@ Zip code level data are hard to find, so to evaluate other economic factors that
 <<FIP Attributes Graph>>
 ```
 
-The (bootstrapped) standard errors indicate that Pilot, Current, and counties receiving no loans are statistically indistinguishable for population, income, and wages. It is still interesting to note that the Pilot program, on average, went to counties with higher level of population, income, and wages. This is very interesting, although we already saw that Pilot loans were underserved areas as noted through FCC data.
+The (bootstrapped) standard errors indicate that Pilot, Current, and counties receiving no loans are statistically indistinguishable for population and income. It is still interesting to note that the Pilot program, on average, went to counties with higher level of population and income. This is very interesting, although we already saw that Pilot loans were underserved areas as noted through FCC data.
 
 ### Location of Loans
 To close, here is a map of where all of the loans went:

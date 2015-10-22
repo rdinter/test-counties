@@ -2,507 +2,651 @@ Oneway (individual) effect Pooling Model
 
 Call:
 plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
-    tri + ruc, data = pdata, model = "pooling")
+    tri + ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, model = "pooling")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
- -9.590  -2.000  -0.259   1.810  22.000 
+ -14.60   -1.88   -0.24    1.71   22.00 
 
 Coefficients :
-               Estimate Std. Error  t-value  Pr(>|t|)    
-(Intercept)  -0.5527159  0.2713230  -2.0371   0.04164 *  
-iloans        1.9259734  0.0343395  56.0862 < 2.2e-16 ***
-log(est)      1.0613363  0.0036119 293.8437 < 2.2e-16 ***
-log(Pop_IRS)  0.6142936  0.0050095 122.6244 < 2.2e-16 ***
-logINC       -0.5645622  0.0269313 -20.9631 < 2.2e-16 ***
-tri          -0.0052519  0.0002695 -19.4878 < 2.2e-16 ***
-rucadj       -0.0785137  0.0162771  -4.8236 1.411e-06 ***
-rucnonadj     0.2719170  0.0192004  14.1620 < 2.2e-16 ***
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+(Intercept)         -1.7526e+00  1.9393e-01  -9.0372 < 2.2e-16 ***
+iloans               1.7420e+00  2.4609e-02  70.7860 < 2.2e-16 ***
+log(est)             1.0477e+00  2.6355e-03 397.5350 < 2.2e-16 ***
+log(Pop_IRS)         5.5668e-01  3.7594e-03 148.0766 < 2.2e-16 ***
+logINC              -3.9560e-01  1.9200e-02 -20.6043 < 2.2e-16 ***
+tri                 -4.4120e-03  1.9532e-04 -22.5886 < 2.2e-16 ***
+rucadj              -8.2925e-02  1.1580e-02  -7.1614 7.998e-13 ***
+rucnonadj            2.4798e-01  1.3725e-02  18.0675 < 2.2e-16 ***
+poly(AREA_zcta, 2)1 -2.7003e+01  2.9681e+00  -9.0978 < 2.2e-16 ***
+poly(AREA_zcta, 2)2  1.9899e+01  2.8973e+00   6.8681 6.513e-12 ***
+I(Pop_IRS/AREA_cty)  9.7887e-05  1.9579e-06  49.9970 < 2.2e-16 ***
+I(est/AREA_zcta)     3.1664e-04  9.1809e-06  34.4892 < 2.2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    4657800
-Residual Sum of Squares: 2521900
-R-Squared      :  0.45857 
-      Adj. R-Squared :  0.45855 
-F-statistic: 35828.4 on 7 and 296122 DF, p-value: < 2.22e-16
+Total Sum of Squares:    8058700
+Residual Sum of Squares: 4127800
+R-Squared      :  0.48778 
+      Adj. R-Squared :  0.48777 
+F-statistic: 46105.6 on 11 and 532572 DF, p-value: < 2.22e-16
 Oneway (individual) effect Within Model
 
 Call:
-plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC, 
-    data = pdata, model = "within")
+plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
+    I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), data = pdata, model = "within")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
--72.400  -1.390  -0.149   1.290  23.600 
+-59.300  -1.300  -0.127   1.230  22.800 
 
 Coefficients :
-              Estimate Std. Error  t-value  Pr(>|t|)    
-iloans        2.591891   0.039275   65.994 < 2.2e-16 ***
-log(est)      1.542767   0.024388   63.259 < 2.2e-16 ***
-log(Pop_IRS) 14.711816   0.073467  200.250 < 2.2e-16 ***
-logINC       -7.940549   0.078062 -101.721 < 2.2e-16 ***
+                       Estimate  Std. Error   t-value Pr(>|t|)    
+iloans               2.3511e+00  2.7498e-02   85.5010  < 2e-16 ***
+log(est)             1.5430e+00  1.7427e-02   88.5420  < 2e-16 ***
+log(Pop_IRS)         1.3369e+01  5.2973e-02  252.3627  < 2e-16 ***
+logINC              -6.5964e+00  5.4367e-02 -121.3300  < 2e-16 ***
+I(Pop_IRS/AREA_cty)  1.3582e-03  3.3809e-05   40.1734  < 2e-16 ***
+I(est/AREA_zcta)     1.4898e-04  6.2159e-05    2.3968  0.01654 *  
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    2018700
-Residual Sum of Squares: 1539500
-R-Squared      :  0.23736 
-      Adj. R-Squared :  0.21362 
-F-statistic: 20736.5 on 4 and 266513 DF, p-value: < 2.22e-16
+Total Sum of Squares:    3203100
+Residual Sum of Squares: 2496700
+R-Squared      :  0.22052 
+      Adj. R-Squared :  0.20826 
+F-statistic: 23716.3 on 6 and 502990 DF, p-value: < 2.22e-16
 Oneway (time) effect Within Model
 
 Call:
 plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
-    tri + ruc, data = pdata, effect = "time", model = "within")
+    tri + ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, effect = "time", model = "within")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
- -8.940  -1.330  -0.179   1.110  17.800 
+-12.300  -1.330  -0.153   1.130  17.800 
 
 Coefficients :
-                Estimate  Std. Error  t-value  Pr(>|t|)    
-iloans       -0.01211811  0.02413022  -0.5022  0.615530    
-log(est)      1.04015309  0.00250974 414.4466 < 2.2e-16 ***
-log(Pop_IRS)  0.51974547  0.00348970 148.9372 < 2.2e-16 ***
-logINC        0.34425936  0.01894136  18.1750 < 2.2e-16 ***
-tri          -0.00663548  0.00018724 -35.4390 < 2.2e-16 ***
-rucadj       -0.03648407  0.01131040  -3.2257  0.001257 ** 
-rucnonadj     0.27724702  0.01334032  20.7826 < 2.2e-16 ***
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+iloans               2.8764e-02  1.8301e-02   1.5717     0.116    
+log(est)             1.0283e+00  1.9390e-03 530.3211 < 2.2e-16 ***
+log(Pop_IRS)         4.7530e-01  2.7722e-03 171.4541 < 2.2e-16 ***
+logINC               3.9516e-01  1.4304e-02  27.6254 < 2.2e-16 ***
+tri                 -5.7013e-03  1.4368e-04 -39.6802 < 2.2e-16 ***
+rucadj              -4.8502e-02  8.5196e-03  -5.6930 1.249e-08 ***
+rucnonadj            2.4993e-01  1.0097e-02  24.7523 < 2.2e-16 ***
+poly(AREA_zcta, 2)1 -2.3237e+01  2.1832e+00 -10.6434 < 2.2e-16 ***
+poly(AREA_zcta, 2)2  1.4828e+01  2.1311e+00   6.9579 3.458e-12 ***
+I(Pop_IRS/AREA_cty)  9.7240e-05  1.4401e-06  67.5225 < 2.2e-16 ***
+I(est/AREA_zcta)     3.1288e-04  6.7531e-06  46.3322 < 2.2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    3263500
-Residual Sum of Squares: 1217000
-R-Squared      :  0.62709 
-      Adj. R-Squared :  0.62705 
-F-statistic: 71134.4 on 7 and 296113 DF, p-value: < 2.22e-16
+Total Sum of Squares:    6029100
+Residual Sum of Squares: 2233200
+R-Squared      :  0.62959 
+      Adj. R-Squared :  0.62956 
+F-statistic: 82291 on 11 and 532555 DF, p-value: < 2.22e-16
 Twoways effects Within Model
 
 Call:
-plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC, 
-    data = pdata, effect = "twoways", model = "within")
+plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
+    I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), data = pdata, effect = "twoways", 
+    model = "within")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Residuals :
-     Min.   1st Qu.    Median   3rd Qu.      Max. 
--23.70000  -0.85500   0.00841   0.85800  12.30000 
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-18.7000  -0.8800   0.0176   0.8900  12.7000 
 
 Coefficients :
-              Estimate Std. Error  t-value  Pr(>|t|)    
-iloans        0.070527   0.024944   2.8274  0.004693 ** 
-log(est)      0.677909   0.015376  44.0896 < 2.2e-16 ***
-log(Pop_IRS)  3.395011   0.053479  63.4826 < 2.2e-16 ***
-logINC       -2.658304   0.055411 -47.9747 < 2.2e-16 ***
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+iloans               9.6936e-02  1.8885e-02   5.1330 2.853e-07 ***
+log(est)             6.7343e-01  1.1891e-02  56.6353 < 2.2e-16 ***
+log(Pop_IRS)         2.9751e+00  4.1862e-02  71.0690 < 2.2e-16 ***
+logINC              -2.1312e+00  4.2181e-02 -50.5253 < 2.2e-16 ***
+I(Pop_IRS/AREA_cty)  2.8196e-04  2.2973e-05  12.2739 < 2.2e-16 ***
+I(est/AREA_zcta)     4.1301e-05  4.2094e-05   0.9812    0.3265    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    624400
-Residual Sum of Squares: 603380
-R-Squared      :  0.033669 
-      Adj. R-Squared :  0.030301 
-F-statistic: 2321.42 on 4 and 266504 DF, p-value: < 2.22e-16
+Total Sum of Squares:    1173500
+Residual Sum of Squares: 1144900
+R-Squared      :  0.024301 
+      Adj. R-Squared :  0.02295 
+F-statistic: 2087.89 on 6 and 502973 DF, p-value: < 2.22e-16
+Oneway (individual) effect First-Difference Model
+
+Call:
+plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
+    I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), data = pdata, model = "fd")
+
+Balanced Panel: n=29588, T=18, N=532584
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+  -9.36   -0.43   -0.43    0.57   14.60 
+
+Coefficients :
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+(intercept)          4.2990e-01  1.7618e-03 244.0206 < 2.2e-16 ***
+iloans              -1.4948e-01  3.0126e-02  -4.9618 6.986e-07 ***
+log(est)             8.8593e-02  1.5163e-02   5.8425 5.145e-09 ***
+log(Pop_IRS)        -2.1550e+00  5.3852e-02 -40.0172 < 2.2e-16 ***
+logINC              -4.5493e-01  3.6473e-02 -12.4730 < 2.2e-16 ***
+I(Pop_IRS/AREA_cty) -4.4296e-04  3.0692e-05 -14.4325 < 2.2e-16 ***
+I(est/AREA_zcta)     3.9595e-05  5.4139e-05   0.7314    0.4646    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    775730
+Residual Sum of Squares: 772420
+R-Squared      :  0.0042587 
+      Adj. R-Squared :  0.0042586 
+F-statistic: 358.538 on 6 and 502989 DF, p-value: < 2.22e-16
 Oneway (individual) effect Between Model
 
 Call:
 plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
-    tri + ruc, data = pdata, model = "between")
+    tri + ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, model = "between")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
- -5.700  -0.945  -0.137   0.778   7.130 
+ -8.780  -0.930  -0.130   0.771   7.160 
 
 Coefficients :
-                Estimate  Std. Error  t-value Pr(>|t|)    
-(Intercept)  -1.1052e+01  4.3673e-01 -25.3051  < 2e-16 ***
-iloans       -1.4834e-01  7.6984e-02  -1.9268  0.05401 .  
-log(est)      1.0428e+00  5.6152e-03 185.7205  < 2e-16 ***
-log(Pop_IRS)  4.9759e-01  7.7935e-03  63.8474  < 2e-16 ***
-logINC        5.6425e-01  4.3462e-02  12.9826  < 2e-16 ***
-tri          -6.7405e-03  4.1635e-04 -16.1896  < 2e-16 ***
-rucadj       -1.7257e-02  2.5142e-02  -0.6864  0.49248    
-rucnonadj     2.9216e-01  2.9639e-02   9.8575  < 2e-16 ***
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+(Intercept)         -1.0733e+01  4.3709e-01 -24.5549 < 2.2e-16 ***
+iloans              -7.7200e-02  7.6807e-02  -1.0051 0.3148484    
+log(est)             1.0313e+00  5.7402e-03 179.6666 < 2.2e-16 ***
+log(Pop_IRS)         4.5705e-01  8.1856e-03  55.8359 < 2.2e-16 ***
+logINC               5.7039e-01  4.3388e-02  13.1463 < 2.2e-16 ***
+tri                 -5.7748e-03  4.2289e-04 -13.6556 < 2.2e-16 ***
+rucadj              -3.2945e-02  2.5062e-02  -1.3145 0.1886761    
+rucnonadj            2.6249e-01  2.9687e-02   8.8421 < 2.2e-16 ***
+poly(AREA_zcta, 2)1 -2.3688e+01  6.4127e+00  -3.6939 0.0002213 ***
+poly(AREA_zcta, 2)2  1.4853e+01  6.2597e+00   2.3728 0.0176625 *  
+I(Pop_IRS/AREA_cty)  9.6981e-05  4.2390e-06  22.8780 < 2.2e-16 ***
+I(est/AREA_zcta)     3.1467e-04  1.9973e-05  15.7542 < 2.2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    263910
-Residual Sum of Squares: 59902
-R-Squared      :  0.77302 
-      Adj. R-Squared :  0.77281 
-F-statistic: 14403.7 on 7 and 29605 DF, p-value: < 2.22e-16
+Total Sum of Squares:    269750
+Residual Sum of Squares: 59409
+R-Squared      :  0.77977 
+      Adj. R-Squared :  0.77945 
+F-statistic: 9519.74 on 11 and 29576 DF, p-value: < 2.22e-16
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Tue, Oct 20, 2015 - 08:28:03 PM
+\begin{table}[!htbp] \centering 
+  \caption{Fixed Effects} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{5}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-6} 
+\\[-1.8ex] & \multicolumn{5}{c}{Prov\_num} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ Constant & $-$1.753$^{***}$ &  &  &  &  \\ 
+  & (0.194) &  &  &  &  \\ 
+  & & & & & \\ 
+ iloans & 1.742$^{***}$ & 2.351$^{***}$ & 0.029 & 0.097$^{***}$ & $-$0.149$^{***}$ \\ 
+  & (0.025) & (0.027) & (0.018) & (0.019) & (0.030) \\ 
+  & & & & & \\ 
+ log(est) & 1.048$^{***}$ & 1.543$^{***}$ & 1.028$^{***}$ & 0.673$^{***}$ & 0.089$^{***}$ \\ 
+  & (0.003) & (0.017) & (0.002) & (0.012) & (0.015) \\ 
+  & & & & & \\ 
+ log(Pop\_IRS) & 0.557$^{***}$ & 13.369$^{***}$ & 0.475$^{***}$ & 2.975$^{***}$ & $-$2.155$^{***}$ \\ 
+  & (0.004) & (0.053) & (0.003) & (0.042) & (0.054) \\ 
+  & & & & & \\ 
+ logINC & $-$0.396$^{***}$ & $-$6.596$^{***}$ & 0.395$^{***}$ & $-$2.131$^{***}$ & $-$0.455$^{***}$ \\ 
+  & (0.019) & (0.054) & (0.014) & (0.042) & (0.036) \\ 
+  & & & & & \\ 
+ tri & $-$0.004$^{***}$ &  & $-$0.006$^{***}$ &  &  \\ 
+  & (0.0002) &  & (0.0001) &  &  \\ 
+  & & & & & \\ 
+ rucadj & $-$0.083$^{***}$ &  & $-$0.049$^{***}$ &  &  \\ 
+  & (0.012) &  & (0.009) &  &  \\ 
+  & & & & & \\ 
+ rucnonadj & 0.248$^{***}$ &  & 0.250$^{***}$ &  &  \\ 
+  & (0.014) &  & (0.010) &  &  \\ 
+  & & & & & \\ 
+ poly(AREA\_zcta, 2)1 & $-$27.003$^{***}$ &  & $-$23.237$^{***}$ &  &  \\ 
+  & (2.968) &  & (2.183) &  &  \\ 
+  & & & & & \\ 
+ poly(AREA\_zcta, 2)2 & 19.899$^{***}$ &  & 14.828$^{***}$ &  &  \\ 
+  & (2.897) &  & (2.131) &  &  \\ 
+  & & & & & \\ 
+ I(Pop\_IRS/AREA\_cty) & 0.0001$^{***}$ & 0.001$^{***}$ & 0.0001$^{***}$ & 0.0003$^{***}$ & $-$0.0004$^{***}$ \\ 
+  & (0.00000) & (0.00003) & (0.00000) & (0.00002) & (0.00003) \\ 
+  & & & & & \\ 
+ I(est/AREA\_zcta) & 0.0003$^{***}$ & 0.0001$^{**}$ & 0.0003$^{***}$ & 0.00004 & 0.00004 \\ 
+  & (0.00001) & (0.0001) & (0.00001) & (0.00004) & (0.0001) \\ 
+  & & & & & \\ 
+ Constant & $-$1.753$^{***}$ &  &  &  &  \\ 
+  & (0.194) &  &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 532,584 & 532,584 & 532,584 & 532,584 & 502,996 \\ 
+R$^{2}$ & 0.488 & 0.221 & 0.630 & 0.024 & 0.004 \\ 
+Adjusted R$^{2}$ & 0.488 & 0.208 & 0.630 & 0.023 & 0.004 \\ 
+F Statistic & 46,105.600$^{***}$ (df = 11; 532572) & 23,716.320$^{***}$ (df = 6; 502990) & 82,290.970$^{***}$ (df = 11; 532555) & 2,087.889$^{***}$ (df = 6; 502973) & 358.538$^{***}$ (df = 6; 502989) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
 Oneway (individual) effect Random Effect Model 
    (Swamy-Arora's transformation)
 
 Call:
 plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
-    tri + ruc, data = pdata, model = "random")
+    tri + ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, model = "random")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Effects:
                 var std.dev share
-idiosyncratic 5.777   2.403   0.8
-individual    1.446   1.202   0.2
-theta:  0.4657  
+idiosyncratic 4.964   2.228 0.741
+individual    1.733   1.316 0.259
+theta:  0.6295  
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
--23.600  -1.720  -0.244   1.650  19.500 
+-35.100  -1.520  -0.215   1.470  18.800 
 
 Coefficients :
-                Estimate  Std. Error  t-value  Pr(>|t|)    
-(Intercept)  18.56331497  0.41717786  44.4974 < 2.2e-16 ***
-iloans        2.93302730  0.03804769  77.0882 < 2.2e-16 ***
-log(est)      1.10748710  0.00597568 185.3324 < 2.2e-16 ***
-log(Pop_IRS)  0.83261432  0.00830531 100.2508 < 2.2e-16 ***
-logINC       -2.62550160  0.04115685 -63.7926 < 2.2e-16 ***
-tri          -0.00384983  0.00045401  -8.4796 < 2.2e-16 ***
-rucadj       -0.12022576  0.02735396  -4.3952 1.107e-05 ***
-rucnonadj     0.30703630  0.03229552   9.5071 < 2.2e-16 ***
+                       Estimate  Std. Error   t-value  Pr(>|t|)    
+(Intercept)          3.0020e+01  3.7106e-01   80.9033 < 2.2e-16 ***
+iloans               2.9309e+00  2.7849e-02  105.2441 < 2.2e-16 ***
+log(est)             1.1324e+00  5.8846e-03  192.4397 < 2.2e-16 ***
+log(Pop_IRS)         9.6661e-01  8.4980e-03  113.7456 < 2.2e-16 ***
+logINC              -3.8778e+00  3.6172e-02 -107.2026 < 2.2e-16 ***
+tri                 -2.2843e-03  4.5548e-04   -5.0151 5.303e-07 ***
+rucadj              -5.1480e-02  2.6860e-02   -1.9166 0.0552869 .  
+rucnonadj            4.3262e-01  3.1895e-02   13.5637 < 2.2e-16 ***
+poly(AREA_zcta, 2)1 -2.3188e+01  6.9308e+00   -3.3456 0.0008211 ***
+poly(AREA_zcta, 2)2  2.0677e+01  6.7675e+00    3.0553 0.0022486 ** 
+I(Pop_IRS/AREA_cty)  9.9515e-05  4.5159e-06   22.0366 < 2.2e-16 ***
+I(est/AREA_zcta)     2.9307e-04  2.0567e-05   14.2499 < 2.2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    2772100
-Residual Sum of Squares: 2049300
-R-Squared      :  0.26074 
-      Adj. R-Squared :  0.26073 
-F-statistic: 14920.2 on 7 and 296122 DF, p-value: < 2.22e-16
+Total Sum of Squares:    3869700
+Residual Sum of Squares: 3099600
+R-Squared      :  0.19899 
+      Adj. R-Squared :  0.19899 
+F-statistic: 12027.9 on 11 and 532572 DF, p-value: < 2.22e-16
 Oneway (time) effect Random Effect Model 
    (Swamy-Arora's transformation)
 
 Call:
 plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
-    tri + ruc, data = pdata, effect = "time", model = "random")
+    tri + ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, effect = "time", model = "random")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Effects:
-                 var std.dev share
-idiosyncratic 4.1099  2.0273 0.866
-time          0.6336  0.7960 0.134
-theta:  0.9852  
+                  var std.dev share
+idiosyncratic 4.19338 2.04777 0.985
+time          0.06195 0.24889 0.015
+theta:  0.9522  
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
-  -8.95   -1.33   -0.18    1.10   17.80 
+-12.200  -1.330  -0.157   1.130  18.000 
 
 Coefficients :
-                Estimate  Std. Error  t-value  Pr(>|t|)    
-(Intercept)  -8.95717670  0.31576423 -28.3667 < 2.2e-16 ***
-iloans       -0.01168071  0.02413270  -0.4840  0.628372    
-log(est)      1.04015790  0.00251000 414.4048 < 2.2e-16 ***
-log(Pop_IRS)  0.51976704  0.00349006 148.9277 < 2.2e-16 ***
-logINC        0.34405146  0.01894331  18.1622 < 2.2e-16 ***
-tri          -0.00663516  0.00018726 -35.4336 < 2.2e-16 ***
-rucadj       -0.03649378  0.01131159  -3.2262  0.001254 ** 
-rucnonadj     0.27724564  0.01334173  20.7803 < 2.2e-16 ***
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+(Intercept)         -9.0515e+00  1.5592e-01 -58.0511 < 2.2e-16 ***
+iloans               3.2787e-02  1.8318e-02   1.7898   0.07348 .  
+log(est)             1.0284e+00  1.9409e-03 529.8268 < 2.2e-16 ***
+log(Pop_IRS)         4.7549e-01  2.7749e-03 171.3573 < 2.2e-16 ***
+logINC               3.9328e-01  1.4318e-02  27.4676 < 2.2e-16 ***
+tri                 -5.6983e-03  1.4382e-04 -39.6203 < 2.2e-16 ***
+rucadj              -4.8585e-02  8.5279e-03  -5.6971 1.219e-08 ***
+rucnonadj            2.4992e-01  1.0107e-02  24.7275 < 2.2e-16 ***
+poly(AREA_zcta, 2)1 -2.3246e+01  2.1853e+00 -10.6371 < 2.2e-16 ***
+poly(AREA_zcta, 2)2  1.4840e+01  2.1332e+00   6.9567 3.487e-12 ***
+I(Pop_IRS/AREA_cty)  9.7242e-05  1.4415e-06  67.4575 < 2.2e-16 ***
+I(est/AREA_zcta)     3.1289e-04  6.7597e-06  46.2883 < 2.2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    3263800
-Residual Sum of Squares: 1217300
-R-Squared      :  0.62703 
-      Adj. R-Squared :  0.62701 
-F-statistic: 71119.8 on 7 and 296122 DF, p-value: < 2.22e-16
+Total Sum of Squares:    6033700
+Residual Sum of Squares: 2237600
+R-Squared      :  0.62914 
+      Adj. R-Squared :  0.62913 
+F-statistic: 82134.3 on 11 and 532572 DF, p-value: < 2.22e-16
 Twoways effects Random Effect Model 
    (Swamy-Arora's transformation)
 
 Call:
 plm(formula = Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + 
-    tri + ruc, data = pdata, effect = "twoways", model = "random")
+    tri + ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, effect = "twoways", model = "random")
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
 Effects:
-                 var std.dev share
-idiosyncratic 2.2641  1.5047 0.482
-individual    1.7970  1.3405 0.383
-time          0.6336  0.7960 0.135
-theta  : 0.6655 (id) 0.989 (time) 0.6655 (total)
+                  var std.dev share
+idiosyncratic 2.27636 1.50876 0.539
+individual    1.88224 1.37195 0.446
+time          0.06201 0.24902 0.015
+theta  : 0.7491 (id) 0.9648 (time) 0.7488 (total)
 
 Residuals :
    Min. 1st Qu.  Median 3rd Qu.    Max. 
--8.3300 -0.9560 -0.0581  0.8710 14.3000 
+-9.3400 -0.9410 -0.0264  0.8890 14.2000 
 
 Coefficients :
-                Estimate  Std. Error  t-value  Pr(>|t|)    
-(Intercept)   1.12937310  0.43264808   2.6104  0.009045 ** 
-iloans        0.08945856  0.02391922   3.7400  0.000184 ***
-log(est)      1.01584861  0.00530515 191.4835 < 2.2e-16 ***
-log(Pop_IRS)  0.64504839  0.00754619  85.4801 < 2.2e-16 ***
-logINC       -0.73097718  0.03444428 -21.2220 < 2.2e-16 ***
-tri          -0.00651805  0.00041799 -15.5937 < 2.2e-16 ***
-rucadj       -0.10238946  0.02508039  -4.0825 4.457e-05 ***
-rucnonadj     0.23820723  0.02963332   8.0385 9.128e-16 ***
+                       Estimate  Std. Error  t-value  Pr(>|t|)    
+(Intercept)          2.6307e+00  3.1827e-01   8.2657 < 2.2e-16 ***
+iloans               1.2105e-01  1.8446e-02   6.5623 5.303e-11 ***
+log(est)             9.7940e-01  5.1849e-03 188.8943 < 2.2e-16 ***
+log(Pop_IRS)         6.4925e-01  7.7862e-03  83.3846 < 2.2e-16 ***
+logINC              -8.7445e-01  3.0400e-02 -28.7649 < 2.2e-16 ***
+tri                 -5.9009e-03  4.2279e-04 -13.9569 < 2.2e-16 ***
+rucadj              -1.0776e-01  2.4824e-02  -4.3409 1.420e-05 ***
+rucnonadj            2.2204e-01  2.9498e-02   7.5272 5.193e-14 ***
+poly(AREA_zcta, 2)1 -9.6867e+00  6.4324e+00  -1.5059    0.1321    
+poly(AREA_zcta, 2)2  5.5794e+00  6.2834e+00   0.8880    0.3746    
+I(Pop_IRS/AREA_cty)  1.0227e-04  4.1275e-06  24.7764 < 2.2e-16 ***
+I(est/AREA_zcta)     2.7276e-04  1.8124e-05  15.0500 < 2.2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    919870
-Residual Sum of Squares: 682150
-R-Squared      :  0.25843 
-      Adj. R-Squared :  0.25842 
-F-statistic: 14742.4 on 7 and 296122 DF, p-value: < 2.22e-16
+Total Sum of Squares:    1481700
+Residual Sum of Squares: 1228200
+R-Squared      :  0.17106 
+      Adj. R-Squared :  0.17106 
+F-statistic: 9991.02 on 11 and 532572 DF, p-value: < 2.22e-16
 
-t test of coefficients:
-
-                Estimate  Std. Error  t value  Pr(>|t|)    
-(Intercept)  18.56331497  0.96626814  19.2113 < 2.2e-16 ***
-iloans        2.93302730  0.03898730  75.2303 < 2.2e-16 ***
-log(est)      1.10748710  0.00709643 156.0625 < 2.2e-16 ***
-log(Pop_IRS)  0.83261432  0.01103107  75.4790 < 2.2e-16 ***
-logINC       -2.62550160  0.09824684 -26.7235 < 2.2e-16 ***
-tri          -0.00384983  0.00045258  -8.5064 < 2.2e-16 ***
-rucadj       -0.12022576  0.02514567  -4.7812 1.744e-06 ***
-rucnonadj     0.30703630  0.03050557  10.0649 < 2.2e-16 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-
-t test of coefficients:
-
-                Estimate  Std. Error  t value  Pr(>|t|)    
-(Intercept)  -8.95717670  0.67572510 -13.2557 < 2.2e-16 ***
-iloans       -0.01168071  0.04044287  -0.2888   0.77272    
-log(est)      1.04015790  0.00570018 182.4782 < 2.2e-16 ***
-log(Pop_IRS)  0.51976704  0.00839951  61.8807 < 2.2e-16 ***
-logINC        0.34405146  0.04878962   7.0517 1.771e-12 ***
-tri          -0.00663516  0.00037916 -17.4996 < 2.2e-16 ***
-rucadj       -0.03649378  0.01990501  -1.8334   0.06674 .  
-rucnonadj     0.27724564  0.02460645  11.2672 < 2.2e-16 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-
-	Lagrange Multiplier Test - time effects (Breusch-Pagan)
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-chisq = 1101300000, df = 1, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	Lagrange Multiplier Test - (Breusch-Pagan)
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-chisq = 37625, df = 1, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	Lagrange Multiplier Test - two-ways effects (Breusch-Pagan)
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-chisq = 1101300000, df = 2, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	F test for individual effects
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-F = -1.8862, df1 = 29600, df2 = 266510, p-value = 1
-alternative hypothesis: significant effects
-
-
-	F test for individual effects
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-F = 5.7436, df1 = 29609, df2 = 266510, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	F test for time effects
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +  ...
-F = 35277, df1 = 9, df2 = 296110, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	F test for twoways effects
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-F = 28.61, df1 = 29618, df2 = 266500, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	F test for individual effects
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +  ...
-F = 3.0867, df1 = 236910, df2 = 29605, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	F test for individual effects
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +  ...
-F = 2.1458, df1 = 266510, df2 = 29605, p-value < 2.2e-16
-alternative hypothesis: significant effects
-
-
-	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-chisq = 165800, df = 10, p-value < 2.2e-16
-alternative hypothesis: serial correlation in idiosyncratic errors
-
-
-	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
-
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc
-chisq = 154370, df = 10, p-value < 2.2e-16
-alternative hypothesis: serial correlation in idiosyncratic errors
-
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Tue, Oct 20, 2015 - 08:36:30 PM
+\begin{table}[!htbp] \centering 
+  \caption{Random Effects} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{Prov\_num} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ iloans & 2.931$^{***}$ & 0.033$^{*}$ & 0.121$^{***}$ \\ 
+  & (0.028) & (0.018) & (0.018) \\ 
+  & & & \\ 
+ log(est) & 1.132$^{***}$ & 1.028$^{***}$ & 0.979$^{***}$ \\ 
+  & (0.006) & (0.002) & (0.005) \\ 
+  & & & \\ 
+ log(Pop\_IRS) & 0.967$^{***}$ & 0.475$^{***}$ & 0.649$^{***}$ \\ 
+  & (0.008) & (0.003) & (0.008) \\ 
+  & & & \\ 
+ logINC & $-$3.878$^{***}$ & 0.393$^{***}$ & $-$0.874$^{***}$ \\ 
+  & (0.036) & (0.014) & (0.030) \\ 
+  & & & \\ 
+ tri & $-$0.002$^{***}$ & $-$0.006$^{***}$ & $-$0.006$^{***}$ \\ 
+  & (0.0005) & (0.0001) & (0.0004) \\ 
+  & & & \\ 
+ rucadj & $-$0.051$^{*}$ & $-$0.049$^{***}$ & $-$0.108$^{***}$ \\ 
+  & (0.027) & (0.009) & (0.025) \\ 
+  & & & \\ 
+ rucnonadj & 0.433$^{***}$ & 0.250$^{***}$ & 0.222$^{***}$ \\ 
+  & (0.032) & (0.010) & (0.029) \\ 
+  & & & \\ 
+ poly(AREA\_zcta, 2)1 & $-$23.188$^{***}$ & $-$23.246$^{***}$ & $-$9.687 \\ 
+  & (6.931) & (2.185) & (6.432) \\ 
+  & & & \\ 
+ poly(AREA\_zcta, 2)2 & 20.677$^{***}$ & 14.840$^{***}$ & 5.579 \\ 
+  & (6.767) & (2.133) & (6.283) \\ 
+  & & & \\ 
+ I(Pop\_IRS/AREA\_cty) & 0.0001$^{***}$ & 0.0001$^{***}$ & 0.0001$^{***}$ \\ 
+  & (0.00000) & (0.00000) & (0.00000) \\ 
+  & & & \\ 
+ I(est/AREA\_zcta) & 0.0003$^{***}$ & 0.0003$^{***}$ & 0.0003$^{***}$ \\ 
+  & (0.00002) & (0.00001) & (0.00002) \\ 
+  & & & \\ 
+ Constant & 30.020$^{***}$ & $-$9.052$^{***}$ & 2.631$^{***}$ \\ 
+  & (0.371) & (0.156) & (0.318) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 532,584 & 532,584 & 532,584 \\ 
+R$^{2}$ & 0.199 & 0.629 & 0.171 \\ 
+Adjusted R$^{2}$ & 0.199 & 0.629 & 0.171 \\ 
+F Statistic (df = 11; 532572) & 12,027.950$^{***}$ & 82,134.310$^{***}$ & 9,991.021$^{***}$ \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
 
 	Hausman Test
 
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC
-chisq = 67601, df = 4, p-value < 2.2e-16
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) +  ...
+chisq = 88552, df = 6, p-value < 2.2e-16
 alternative hypothesis: one model is inconsistent
 
 
 	Hausman Test
 
 data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +  ...
-chisq = 2.2348, df = 7, p-value = 0.9457
+chisq = 35.377, df = 11, p-value = 0.0002147
 alternative hypothesis: one model is inconsistent
 
 
 	Hausman Test
 
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +  ...
-chisq = 36.836, df = 8, p-value = 1.234e-05
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) +  ...
+chisq = 5976.9, df = 6, p-value < 2.2e-16
 alternative hypothesis: one model is inconsistent
 
 
-	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
+	Breusch-Godfrey/Wooldridge test for serial correlation in
+	panel models
 
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc
-chisq = 187000, df = 10, p-value < 2.2e-16
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) +     I(est/AREA_zcta)
+chisq = 300150, df = 18, p-value < 2.2e-16
 alternative hypothesis: serial correlation in idiosyncratic errors
 
 
-	Breusch-Godfrey/Wooldridge test for serial correlation in panel models
+	Breusch-Godfrey/Wooldridge test for serial correlation in
+	panel models
 
-data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc
-chisq = 154360, df = 10, p-value < 2.2e-16
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta)
+chisq = 327310, df = 18, p-value < 2.2e-16
 alternative hypothesis: serial correlation in idiosyncratic errors
 
 
-t test of coefficients:
+	Breusch-Godfrey/Wooldridge test for serial correlation in
+	panel models
 
-             Estimate Std. Error t value  Pr(>|t|)    
-iloans        2.59189    0.46712  5.5487 2.881e-08 ***
-log(est)      1.54277    0.17402  8.8654 < 2.2e-16 ***
-log(Pop_IRS) 14.71182    1.56311  9.4119 < 2.2e-16 ***
-logINC       -7.94055    4.01493 -1.9778   0.04796 *  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) +     I(est/AREA_zcta)
+chisq = 221110, df = 18, p-value < 2.2e-16
+alternative hypothesis: serial correlation in idiosyncratic errors
 
 
-t test of coefficients:
+	Breusch-Godfrey/Wooldridge test for serial correlation in
+	panel models
 
-               Estimate Std. Error t value  Pr(>|t|)    
-iloans       -0.0121181  0.0416996 -0.2906   0.77135    
-log(est)      1.0401531  0.1256906  8.2755 < 2.2e-16 ***
-log(Pop_IRS)  0.5197455  0.0566875  9.1686 < 2.2e-16 ***
-logINC        0.3442594  0.1526240  2.2556   0.02410 *  
-tri          -0.0066355  0.0016232 -4.0879 4.355e-05 ***
-rucadj       -0.0364841  0.0675740 -0.5399   0.58926    
-rucnonadj     0.2772470  0.1126343  2.4615   0.01384 *  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta)
+chisq = 337020, df = 18, p-value < 2.2e-16
+alternative hypothesis: serial correlation in idiosyncratic errors
+
+
+	Breusch-Godfrey/Wooldridge test for serial correlation in
+	panel models
+
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta)
+chisq = 327170, df = 18, p-value < 2.2e-16
+alternative hypothesis: serial correlation in idiosyncratic errors
+
+
+	Breusch-Godfrey/Wooldridge test for serial correlation in
+	panel models
+
+data:  Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +     ruc + poly(AREA_zcta, 2) + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta)
+chisq = 228140, df = 18, p-value < 2.2e-16
+alternative hypothesis: serial correlation in idiosyncratic errors
 
 Oneway (individual) effect Within Model
 
 Call:
 plm(formula = Prov_num ~ lag(Prov_num, 1) + iloans + log(est) + 
-    log(Pop_IRS) + logINC, data = pdata, model = "within", index = c("zip", 
-    "year"))
+    log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta), 
+    data = pdata, model = "within", index = c("zip", "time"))
 
-Unbalanced Panel: n=29613, T=9-10, N=296129
+Unbalanced Panel: n=29588, T=17-18, N=532583
 
 Residuals :
      Min.   1st Qu.    Median   3rd Qu.      Max. 
--67.90000  -1.06000   0.00524   1.20000  19.80000 
+-45.10000  -0.79700  -0.00102   0.98200  15.10000 
 
 Coefficients :
-                   Estimate Std. Error  t-value  Pr(>|t|)    
-lag(Prov_num, 1)  0.2923892  0.0015449  189.260 < 2.2e-16 ***
-iloans            2.1367321  0.0369532   57.823 < 2.2e-16 ***
-log(est)          1.4199649  0.0229070   61.988 < 2.2e-16 ***
-log(Pop_IRS)     12.3160520  0.0701297  175.618 < 2.2e-16 ***
-logINC           -7.4875140  0.0733310 -102.106 < 2.2e-16 ***
+                       Estimate  Std. Error   t-value Pr(>|t|)    
+lag(Prov_num, 1)     4.6147e-01  1.0821e-03  426.4428   <2e-16 ***
+iloans               1.5269e+00  2.3645e-02   64.5743   <2e-16 ***
+log(est)             1.1456e+00  1.4964e-02   76.5547   <2e-16 ***
+log(Pop_IRS)         8.6724e+00  4.6715e-02  185.6443   <2e-16 ***
+logINC              -5.0243e+00  4.6739e-02 -107.4990   <2e-16 ***
+I(Pop_IRS/AREA_cty)  1.2337e-03  2.8976e-05   42.5758   <2e-16 ***
+I(est/AREA_zcta)     8.7446e-05  5.3270e-05    1.6416   0.1007    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Total Sum of Squares:    2018600
-Residual Sum of Squares: 1357100
-R-Squared      :  0.32771 
-      Adj. R-Squared :  0.29493 
-F-statistic: 25982.5 on 5 and 266511 DF, p-value: < 2.22e-16
+Total Sum of Squares:    3203100
+Residual Sum of Squares: 1833700
+R-Squared      :  0.4275 
+      Adj. R-Squared :  0.40375 
+F-statistic: 53656.8 on 7 and 502988 DF, p-value: < 2.22e-16
 Twoways effects One step model
 
 Call:
 pgmm(formula = Prov_num ~ lag(Prov_num, 1) + iloans + log(est) + 
-    log(Pop_IRS) + logINC | lag(Prov_num, 2:99) + tri, data = pdata, 
-    index = c("zip", "year"))
+    log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta) | 
+    lag(Prov_num, 2:99) + tri, data = pdata, index = c("zip", 
+    "time"))
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
-Number of Observations Used:  236904 
+Number of Observations Used:  473408 
 
 Residuals
-    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
--14.1100  -0.8188  -0.1811   0.0000   0.7937  14.4000 
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-16.98000  -0.64250  -0.09545   0.00000   0.61770  15.84000 
 
 Coefficients
-                   Estimate Std. Error z-value  Pr(>|z|)    
-lag(Prov_num, 1)  0.5129567  0.0060294 85.0753 < 2.2e-16 ***
-iloans            0.0627687  0.0380191  1.6510  0.098744 .  
-log(est)          0.1622805  0.0236372  6.8655 6.627e-12 ***
-log(Pop_IRS)      1.1592920  0.1758438  6.5927 4.318e-11 ***
-logINC           -1.4060648  0.4366267 -3.2203  0.001281 ** 
+                       Estimate  Std. Error  z-value  Pr(>|z|)    
+lag(Prov_num, 1)     6.0374e-01  3.9783e-03 151.7587 < 2.2e-16 ***
+iloans               1.8899e-01  4.3005e-02   4.3947 1.109e-05 ***
+log(est)             1.4252e-01  2.2858e-02   6.2349 4.522e-10 ***
+log(Pop_IRS)         1.5378e+00  1.9831e-01   7.7546 8.860e-15 ***
+logINC              -1.5288e+00  5.0298e-01  -3.0394 0.0023703 ** 
+I(Pop_IRS/AREA_cty)  2.2035e-04  3.1800e-05   6.9293 4.228e-12 ***
+I(est/AREA_zcta)    -2.9923e-05  8.0306e-06  -3.7262 0.0001944 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Sargan Test: chisq(43) = 8740.595 (p.value=< 2.22e-16)
-Autocorrelation test (1): normal = -80.33264 (p.value=< 2.22e-16)
-Autocorrelation test (2): normal = -19.19254 (p.value=< 2.22e-16)
-Wald test for coefficients: chisq(5) = 9367.412 (p.value=< 2.22e-16)
-Wald test for time dummies: chisq(8) = 18261.13 (p.value=< 2.22e-16)
+Sargan Test: chisq(151) = 11669.39 (p.value=< 2.22e-16)
+Autocorrelation test (1): normal = -112.8362 (p.value=< 2.22e-16)
+Autocorrelation test (2): normal = 14.50337 (p.value=< 2.22e-16)
+Wald test for coefficients: chisq(7) = 36553.3 (p.value=< 2.22e-16)
+Wald test for time dummies: chisq(16) = 35440.43 (p.value=< 2.22e-16)
 Oneway (individual) effect One step model
 
 Call:
 pgmm(formula = Prov_num ~ lag(Prov_num, 1) + iloans + log(est) + 
-    log(Pop_IRS) + logINC | lag(Prov_num, 2:99) + tri, data = pdata, 
-    effect = "individual", index = c("zip", "year"))
+    log(Pop_IRS) + logINC + I(Pop_IRS/AREA_cty) + I(est/AREA_zcta) | 
+    lag(Prov_num, 2:99) + tri, data = pdata, effect = "individual", 
+    index = c("zip", "time"))
 
-Balanced Panel: n=29613, T=10, N=296130
+Balanced Panel: n=29588, T=18, N=532584
 
-Number of Observations Used:  236904 
+Number of Observations Used:  369198 
 
 Residuals
-      Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
--16.230000  -1.007000  -0.001185   0.086450   1.003000  14.470000 
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-16.23000  -0.86570   0.00000   0.07372   0.97060  14.97000 
 
 Coefficients
-                   Estimate Std. Error  z-value  Pr(>|z|)    
-lag(Prov_num, 1)  1.0187884  0.0028198 361.2966 < 2.2e-16 ***
-iloans           -0.0627577  0.0499002  -1.2577  0.208513    
-log(est)          0.1052375  0.0258231   4.0753 4.595e-05 ***
-log(Pop_IRS)      0.2232924  0.0887345   2.5164  0.011856 *  
-logINC           -0.1502936  0.0559884  -2.6844  0.007267 ** 
+                      Estimate Std. Error  z-value Pr(>|z|)    
+lag(Prov_num, 1)    9.4889e-01 2.1132e-03 449.0262  < 2e-16 ***
+iloans              5.5843e-01 4.9650e-02  11.2474  < 2e-16 ***
+log(est)            2.8154e-01 2.3402e-02  12.0305  < 2e-16 ***
+log(Pop_IRS)        1.5484e+00 8.4445e-02  18.3359  < 2e-16 ***
+logINC              7.9060e-02 4.4397e-02   1.7808  0.07495 .  
+I(Pop_IRS/AREA_cty) 8.7354e-04 8.4066e-05  10.3911  < 2e-16 ***
+I(est/AREA_zcta)    1.3219e-04 9.8542e-05   1.3415  0.17977    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Sargan Test: chisq(43) = 9260.246 (p.value=< 2.22e-16)
-Autocorrelation test (1): normal = -99.54814 (p.value=< 2.22e-16)
-Autocorrelation test (2): normal = -12.99687 (p.value=< 2.22e-16)
-Wald test for coefficients: chisq(5) = 294023.8 (p.value=< 2.22e-16)
-[1] "Finished 3-USDA_Evaluation_Basic at 2015-08-20 13:50:20"
+Sargan Test: chisq(151) = 15439.01 (p.value=< 2.22e-16)
+Autocorrelation test (1): normal = -126.1982 (p.value=< 2.22e-16)
+Autocorrelation test (2): normal = 15.11137 (p.value=< 2.22e-16)
+Wald test for coefficients: chisq(7) = 741290.5 (p.value=< 2.22e-16)
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Tue, Oct 20, 2015 - 08:47:34 PM
+\begin{table}[!htbp] \centering 
+  \caption{Dynamic Panel} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{Prov\_num} \\ 
+\\[-1.8ex] & \textit{panel} & \multicolumn{2}{c}{\textit{panel}} \\ 
+ & \textit{linear} & \multicolumn{2}{c}{\textit{GMM}} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ lag(Prov\_num, 1) & 0.461$^{***}$ & 0.604$^{***}$ & 0.949$^{***}$ \\ 
+  & (0.001) & (0.004) & (0.002) \\ 
+  & & & \\ 
+ iloans & 1.527$^{***}$ & 0.189$^{***}$ & 0.558$^{***}$ \\ 
+  & (0.024) & (0.043) & (0.050) \\ 
+  & & & \\ 
+ log(est) & 1.146$^{***}$ & 0.143$^{***}$ & 0.282$^{***}$ \\ 
+  & (0.015) & (0.023) & (0.023) \\ 
+  & & & \\ 
+ log(Pop\_IRS) & 8.672$^{***}$ & 1.538$^{***}$ & 1.548$^{***}$ \\ 
+  & (0.047) & (0.198) & (0.084) \\ 
+  & & & \\ 
+ logINC & $-$5.024$^{***}$ & $-$1.529$^{***}$ & 0.079$^{*}$ \\ 
+  & (0.047) & (0.503) & (0.044) \\ 
+  & & & \\ 
+ I(Pop\_IRS/AREA\_cty) & 0.001$^{***}$ & 0.0002$^{***}$ & 0.001$^{***}$ \\ 
+  & (0.00003) & (0.00003) & (0.0001) \\ 
+  & & & \\ 
+ I(est/AREA\_zcta) & 0.0001 & $-$0.00003$^{***}$ & 0.0001 \\ 
+  & (0.0001) & (0.00001) & (0.0001) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 532,583 & 29,588 & 29,588 \\ 
+R$^{2}$ & 0.428 &  &  \\ 
+Adjusted R$^{2}$ & 0.404 &  &  \\ 
+F Statistic & 53,656.780$^{***}$ (df = 7; 502988) &  &  \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
+[1] "Finished 3-USDA_Evaluation_Basic at 2015-10-20 20:48:33"

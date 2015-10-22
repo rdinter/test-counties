@@ -278,6 +278,23 @@ temp <- table(data$zip)
 keep <- temp[temp == 18] #only keep zips that appear 18 times.
 data <- filter(data, zip %in% as.numeric(names(keep)))
 
+# Helpful variables
+set.seed(324) # Done for pretty histograms
+data$Prov_hist <- ifelse(data$Prov_num == 2,
+                         round(runif(sum(data$Prov_num == 2), 0.5, 3.5)),
+                         data$Prov_num)
+
+data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
+data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
+
+
+data$HHINC_IRS_R  <- data$AGI_IRS_R*1000 / data$HH_IRS
+data$HHWAGE_IRS_R <- data$Wages_IRS_R*1000 / data$HH_IRS
+data$logINC       <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
+data$logWAGE      <- log(data$HHWAGE_IRS_R)
+data$ruc          <- factor(data$ruc03)
+levels(data$ruc)  <- list("metro" = 1:3, "adj" = c(4,6,8), "nonadj" = c(5,7,9))
+
 write_csv(data, paste0(localDir, "/Final.csv"))
 save(data, file = paste0(localDir, "/Final.Rda"))
 

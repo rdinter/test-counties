@@ -2,7 +2,7 @@
 title: "3-USDA Evaluation Basic"
 author: "Robert Dinterman"
 date: '`r Sys.Date()`'
-output: pdf_document
+output: html_document
 ---
 
 ```{r, include=FALSE}
@@ -27,16 +27,16 @@ The following regressions make use of the `plm` package in `R` in order to ident
 ```{r}
 library(ggplot2)
 library(gridExtra)
-hp <- ggplot(pdata, aes(x = Prov_num)) + geom_histogram() + theme_minimal()
+hp <- ggplot(pdata, aes(x = Prov_hist)) + geom_histogram() + theme_minimal()
 grid.arrange(hp + scale_x_discrete(breaks = c(5, 10, 15, 20, 25)) +
                labs(title = "Number of Providers (Pooled)", x= "", y = "Count"),
-             hp + scale_x_discrete(breaks = c(5, 10, 15)) + facet_wrap(~ year) +
+             hp + scale_x_discrete(breaks = c(5, 10, 15)) + facet_wrap(~time) +
                coord_cartesian(xlim = c(0, 15)) +
-               labs(title = "Across Years", x= "", y = ""),
+               labs(title = "Across Time", x= "", y = ""),
              ncol = 2)
 ```
 
-Data on broadband providers is measured twice a year (June 30 and December 31), therefore the two values are averaged for the yearly value. Further, the variable takes on a count value of 0, 1-3\*, 4, 5, 6, ... 31. The value 1-3\* is a suppressed value of broadband providers for confidentiality purposes and has been coded as 2 to be consistent with the literature.
+Data on broadband providers is measured twice a year (June 30 and December 31), ~~therefore the two values are averaged for the yearly value~~. Further, the variable takes on a count value of 0, 1-3\*, 4, 5, 6, ... 31. The value 1-3\* is a suppressed value of broadband providers for confidentiality purposes and has been coded as 2 to be consistent with the literature.
 
 Other variables used include:
 
@@ -46,6 +46,9 @@ Other variables used include:
 * `logINC` - this is tabulated from the same IRS data above using Adjusted Gross Income (AGI) at the county level for each year. This is divided by the number of households for a county and is therefore a proxy for mean income, as reported to the IRS, per year. Again, this is a right-skewed variable which is the justification for taking the logarithm of the variable.
 * `tri` - stands for Terrain Ruggedness Index which uses elevation data for a given polygon to calculate the feature changes in a given area relative to the entire domain. This is at the ZCTA level across the United States and is thought of as a proxy for increased costs of broadband deployment due to rough terrain. This does not vary across years and so zip code fixed effects will take away this variable.
 * `ruc` - the rural-urban continuum code, but for this study I simply use 3 classifications of a county: Metro, Rural but adjacent to a metro county, and Rural but non-adjacent to a metro county. Counties do change across time, but only in years that end in 3 (1993, 2003, ...). I choose to use the values for 2003 as this would be a little bit before the halfway point in the analysis.
+* `AREA_zcta` - through the zip code shapefile, the total square miles of the particular zip code is calculated through GIS software in R. Holding all else constant, it should be the case that larger zip codes have more broadband providers because they span a greater area which allows a different broadband provider to potentially serve the area. It is not the case that zip codes are randomly drawn, they are designed by the postal service and thus their goal is to efficiently serve the United States. This leads to zip code area being negatively correlated with population (value of `r format(cor(data$AREA_zcta, data$SUMBLKPOP), digits = 3)`). Because of this, one needs to further control for density of people and firms.
+* `I(Pop_IRS / AREA_cty)` - using the population data from the IRS, which is at the county level, I can proxy density at the county level by dividing by the square miles of the county. A denser county will attract more broadband providers as they have a larger customer base. The area is calculated through GIS software in R by using a county level shapefile.
+* `I(est / AREA_zcta)` - to further proxy for density of firms, the yearly value of establishments per zip code is divided by the area of the zip code.
 
 ## Static Models
 
@@ -199,7 +202,7 @@ The fitted values appear closest to the observed values, however the Q-Q plot of
 
 The most obvious tests are to first check whether we have Fixed Effects or Random Effects through a Hausman test. Below are the Hausman tests matched up from the models above as 1. to 1.; 2. to 2.; and 3. to 3.
 
-```{r Tests}
+```{r Tests, echo = TRUE}
 <<Tests>>
 ```
 
@@ -211,17 +214,22 @@ One implication for this would be to have a mixed model where there are fixed zi
 
 For instance, knowing that the dependent variable is generally increasing over time, and that once a broadband provider forms in one zip code they are likely to exist for multiple periods further, we know that models which do not account for previous number of broadband providers will not accurately reflect reality. Because of this, we proceed onto a more complex model by lagging the dependent variable. As a quick check for whether or not this may be appropriate, I present tests of serial correlation for the six models that I have discussed in this section to motive that use of a Dynamic Panel Model:
 
-```{r Serial}
+```{r Serial, echo = TRUE}
 <<Serial>>
 ```
 
 And further, I have taken the year fixed effects model and calculated the correlation of residuals across time as another way to indicate serial correlation is present in the models:
 
 ```{r}
-d   <- data.frame(resids = scale(p1t$residuals), year = pdata$year)
-dx  <- split(d$resids, d$year)
+## Need to merge the residuals to data ...
+data$p1tr <- residuals(p1t)
+
+d   <- dplyr::select(data, p1t, year, zip) %>%
+  group_by(year, zip) %>% 
+  summarise_each(funs(mean))
+dx  <- split(d$p1t, d$year)
 dxx <- do.call(cbind, dx)
-kable(cor(dxx))
+knitr::kable(cor(dxx), digits = 3)
 ```
 
 ## Dynamic Models

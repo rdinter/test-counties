@@ -13,39 +13,32 @@ localDir <- "3-Basic_Modeling/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
-
-data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
-data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
-
-
-data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
-data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
-data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
 data$iloans <- 1*(data$loans > 0)
 data$ipilot <- 1*(data$ploans > 0)
 data$icur   <- 1*(data$biploans1234 > 0)
-data$ruc    <- factor(data$ruc03)
-levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
-                          "nonadj" = c(5,7,9))
-
 data %>%
   group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
   dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
-         logINC, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
-         Prov_alt, loans, ploans, biploans1234, iloans, ipilot, icur,
+         logINC, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA_cty,
+         AREA_zcta, Prov_alt, loans, ploans, biploans1234, iloans, ipilot, icur,
          long, lat) %>%
   summarise_each(funs(mean)) -> pdata
+
+pdata$Prov_alt <- round(pdata$Prov_alt)
+pdata$Prov_num <- round(pdata$Prov_num)
 
 # pdata <- pdata.frame(pdata, index = c("zip", "year"))
 
 # ---- Biannual -----------------------------------------------------------
 
-pois   <- glm(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) +
-                logINC + tri + ruc, family = poisson, data = data)
+pois   <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+                poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
+              family = poisson, data = data)
 summary(pois)
 
-poist  <- glm(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) +
-                logINC + tri + factor(year) + ruc, family = poisson,
+poist  <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+                poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+                factor(time), family = poisson,
               data = data)
 summary(poist)
 
@@ -63,8 +56,9 @@ anova(pois, poist, test = "Chisq")
 
 # ---- Annual -------------------------------------------------------------
 rm(pois, poist)
-pois1  <- glm(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) + logINC +
-                tri + ruc + factor(year), family = poisson, data = pdata)
+pois1 <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+               poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(year), family = poisson, data = pdata)
 summary(pois1)
 # png(paste0(localDir, "/PoissonDiagnostics_yearlog.png"),
 #     width=6, height=6, units='in', res=300)
@@ -72,8 +66,9 @@ summary(pois1)
 # plot(pois1, ask = F)
 # dev.off()
 
-qpois1  <- glm(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) + logINC +
-                 tri + ruc + factor(year), family = quasipoisson, data = pdata)
+qpois1 <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+               poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(year), family = quasipoisson, data = pdata)
 summary(qpois1)
 # png(paste0(localDir, "/QPoissonDiagnostics_yearlog.png"),
 #     width=6, height=6, units='in', res=300)
@@ -82,23 +77,14 @@ summary(qpois1)
 # dev.off()
 # 
 # library(MASS)
-# negb1  <- glm.nb(round(Prov_num) ~ iloans + log(est) + log(Pop_IRS) + logINC +
-#                    tri + ruc + factor(year), data = pdata)
+# negb1  <- glm.nb(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +
+#                    ruc + poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) +
+#                    I(est / AREA_zcta) + factor(year), data = pdata)
 # summary(negb1)
 # png(paste0(localDir, "/NegBDiagnostics_yearlog.png"),
 #     width=6, height=6, units='in', res=300)
 # layout(matrix(1:4, ncol = 2))
 # plot(negb1, ask = F)
-# dev.off()
-
-
-# pois2 <- glm(round(Prov_num) ~ iloans + est + Pop_IRS + HHINC_IRS_R + tri +
-#                ruc + factor(year), family = poisson, data = pdata)
-# summary(pois2)
-# png(paste0(localDir, "/PoissonDiagnostics_year.png"),
-#     width=6, height=6, units='in', res=300)
-# layout(matrix(1:4, ncol = 2))
-# plot(pois2, ask = F)
 # dev.off()
 
 

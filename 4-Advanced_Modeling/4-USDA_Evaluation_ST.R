@@ -16,20 +16,9 @@ localDir <- "4-Advanced_Modeling/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
-
-data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
-data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
-
-data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
-data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
-data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
 data$iloans <- 1*(data$loans > 0)
 data$ipilot <- 1*(data$ploans > 0)
 data$icur   <- 1*(data$biploans1234 > 0)
-data$ruc    <- factor(data$ruc03)
-levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
-                         "nonadj" = c(5,7,9))
-
 data %>%
   group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
   dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
@@ -38,6 +27,8 @@ data %>%
                 long, lat) %>%
   summarise_each(funs(mean)) -> pdata
 
+pdata$Prov_alt <- round(pdata$Prov_alt)
+pdata$Prov_num <- round(pdata$Prov_num)
 # sdata <- STFDF(SpatialPoints(cbind(unique(pdata$long), unique(pdata$lat))),
 #                as.Date(unique(as.character(pdata$year)), "%Y"),
 #                data.frame(pdata))

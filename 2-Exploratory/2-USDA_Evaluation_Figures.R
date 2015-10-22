@@ -16,15 +16,6 @@ if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
 
-# Uniform distribution for the suppressed providers
-set.seed(324) # Done for pretty histograms
-data$Prov_hist <- ifelse(data$Prov_num == 2,
-                         runif(sum(data$Prov_num == 2),1,3),
-                         data$Prov_num)
-data$Prov_alt  <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
-data$Prov_alt  <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
-
-
 # ---- Zip time -----------------------------------------------------------
 hp <- ggplot(data, aes(x = Prov_hist)) + geom_histogram() +
   coord_cartesian(xlim = c(0, 15)) 
@@ -151,7 +142,7 @@ data %>%
 ta  <- bind_rows(t1, t3, t4)
 ta  <- arrange(ta, year, Category)
 pta <- data.frame(year = as.character(ta$year))
-pta <- cbind(pta, sapply(ta[,2:11], function(x)
+pta <- cbind(pta, sapply(ta[,2:13], function(x)
   prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
 pta
 
@@ -247,8 +238,9 @@ fipdata <- data %>%
          HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
          HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS), Area = mean(AREA_cty),
          Pilot = sum(ploans), `Farm Bill` = sum(biploans1234), 
-         Prov = sum(Prov_hist)/n, ipilot = !all(!ipilot),
-         ibip1234 = !all(!ibip1234), iloans = !all(!iloans))
+         Prov = weighted.mean(Prov_hist, SUMBLKPOP + 1),
+         ipilot = !all(!ipilot), ibip1234 = !all(!ibip1234),
+         iloans = !all(!iloans))
 
 # # KKLR Check:
 # library(knitr)
@@ -266,8 +258,7 @@ fipdata %>%
   summarise(Category = "All", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
-            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
-            HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t1
+            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS)) -> t1
 # "Farm Bill Loans"
 fipdata %>%
   group_by(year) %>%
@@ -276,8 +267,7 @@ fipdata %>%
   summarise(Category = "Farm Bill", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
-            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
-            HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t3
+            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS)) -> t3
 # Pilot Loans
 fipdata %>%
   group_by(year) %>%
@@ -286,19 +276,17 @@ fipdata %>%
   summarise(Category = "Pilot", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
-            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
-            HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t4
+            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS)) -> t4
 ta <- bind_rows(t1, t3, t4)
 ta <- arrange(ta, year, Category)
 pta <- data.frame(year = as.character(ta$year))
-pta <- cbind(pta, sapply(ta[,2:11], function(x)
+pta <- cbind(pta, sapply(ta[,2:9], function(x)
   prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
 pta
 pta$Providers <- paste0(pta$Provm, " (", pta$ProvSD, ")")
 pta$Population <- paste0(pta$PopIRSm, " (", pta$PopIRSSD, ")")
 pta$Income <- paste0(pta$HHIncIRSm, " (", pta$HHIncIRSSD, ")")
-pta$Wages <- paste0(pta$HHWageIRSm, " (", pta$HHWageIRSSD, ")")
-pta <- select(pta, year:n, Providers, Population, Income, Wages)
+pta <- select(pta, year:n, Providers, Population, Income)
 write.csv(pta, paste0(localDir, "/Fips_Stats.csv"), row.names = F)
 stargazer(pta, summary = F, rownames = F)
 
@@ -306,18 +294,18 @@ stargazer(pta, summary = F, rownames = F)
 # ---- FIP Attributes Graph -----------------------------------------------
 fipdata %>%
   filter(ipilot) %>%
-  select(fips, year, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
-  gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall2
+  select(fips, year, PopIRS, HHIncIRS, Prov) %>%
+  gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall2
 fipall2$class <- "Pilot"
 fipdata %>%
   filter(ibip1234) %>%
-  select(fips, year, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
-  gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall3
+  select(fips, year, PopIRS, HHIncIRS, Prov) %>%
+  gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall3
 fipall3$class <- "Farm Bill"
 fipdata %>%
   filter(!ipilot | !ibip1234) %>%
-  select(fips, year, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
-  gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall4
+  select(fips, year, PopIRS, HHIncIRS, Prov) %>%
+  gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall4
 fipall4$class <- "No Loan"
 fipall <- bind_rows(fipall2, fipall3, fipall4)
 
@@ -349,7 +337,7 @@ data$loantype <- factor(data$loantype)
 
 
 data %>% 
-  select(zip, time, ruc, loantype, Prov_num, fips) %>% 
+  select(zip, time, ruc, loantype, Prov_num, fips, SUMBLKPOP) %>% 
   gather(key, value, Prov_num) -> RUC
 
 RUC$zero <- ifelse(RUC$value == 0, 1, 0)
@@ -381,14 +369,20 @@ RUC %>%
 RUC %>% 
   group_by(loantype) %>% 
   summarise(Metro = sprintf("%.1f %%", 100*sum(ruc == "Urban") / n()),
-            `Rural Adjacent` = sprintf("%.1f %%", 100*sum(ruc == "Rural-Adjacent") / n()),
+            `Rural Adjacent` = sprintf("%.1f %%",
+                                       100*sum(ruc == "Rural-Adjacent") / n()),
             `Rural Non-Adjacent` = sprintf("%.1f %%",
-                                           100*sum(ruc == "Rural-Nonadjacent") / n())) %>% 
-  knitr::kable(caption = "County Class by Loan Type")
+                                           100*sum(ruc == "Rural-Nonadjacent") /
+                                             n())) -> temp
+knitr::kable(temp, caption = "County Class by Loan Type")
+write.csv(temp, paste0(localDir, "/Fips_class_loan.csv"), row.names = F)
 
 # ---- RUC graph ----------------------------------------------------------
+temp <- RUC %>%
+  group_by(time, fips, ruc) %>%
+  summarise(Prov = weighted.mean(value, SUMBLKPOP + 1))
 
-ggplot(RUC, aes(x = time, y = value, colour = ruc, group = ruc)) +
+ggplot(temp, aes(x = time, y = Prov, colour = ruc, group = ruc)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "smooth") +
   scale_y_continuous(labels = comma) +
   guides(color = guide_legend(title = "County Class")) +

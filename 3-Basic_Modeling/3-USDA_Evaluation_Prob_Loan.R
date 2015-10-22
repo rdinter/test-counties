@@ -24,21 +24,9 @@ localDir <- "3-Basic_Modeling/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
-
-data$Prov_alt <- ifelse(data$Prov_num == 2, 1, data$Prov_num)
-data$Prov_alt <- ifelse(data$Prov_alt > 2, data$Prov_alt - 2, data$Prov_alt)
-
-
-data$HHINC_IRS_R   <- data$AGI_IRS_R*1000 / data$HH_IRS
-data$HHWAGE_IRS_R  <- data$Wages_IRS_R*1000 / data$HH_IRS
-data$logINC <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
-# data$iloans <- 1*(data$loans > 0)
-# data$ipilot <- 1*(data$ploans > 0)
-# data$icur   <- 1*(data$biploans1234 > 0)
-data$ruc    <- factor(data$ruc03)
-levels(data$ruc) <- list("metro" = 1:3, "adj" = c(4,6,8),
-                         "nonadj" = c(5,7,9))
-
+data$iloans <- 1*(data$loans > 0)
+data$ipilot <- 1*(data$ploans > 0)
+data$icur   <- 1*(data$biploans1234 > 0)
 # ---- Logits -------------------------------------------------------------
 # Stated goals: underserved rural communities with fewer than 20,000
 ploans <- glm(iloans ~ I(Prov_alt < 2) + I(SUMBLKPOP < 20000) + ruc,
@@ -89,3 +77,12 @@ hpbip   <- hetglm(ibip1234 ~ I(Prov_alt < 2) + Prov_alt + log(SUMBLKPOP + 1) +
                   data = data, subset = time == "2000-12-31")
 summary(hpbip)
 logitplot(hpbip)
+
+# ---- Test ---------------------------------------------------------------
+
+data$weights <- hploans1$fitted.values
+data$iweight <- 1 / hploans1$fitted.values
+poist <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC +
+               tri + ruc + factor(time), family = poisson, data = data,
+             weights = weights)
+summary(poist)
