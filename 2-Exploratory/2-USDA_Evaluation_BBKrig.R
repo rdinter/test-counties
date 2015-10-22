@@ -8,11 +8,11 @@
 print(paste0("Started 2-USDA_Evaluation_Maps at ", Sys.time()))
 
 source("2-Exploratory/2-functions.R")
-suppressMessages(library(dplyr))
-suppressMessages(library(ggplot2))
-suppressMessages(library(gstat))
-suppressMessages(library(sp))
-suppressMessages(library(RColorBrewer))
+library(dplyr)
+library(ggplot2)
+library(gstat)
+library(sp)
+library(RColorBrewer)
 
 # Create a directory for the data
 localDir <- "2-Exploratory/USDA_Evaluation"
