@@ -311,7 +311,7 @@ fipall <- bind_rows(fipall2, fipall3, fipall4)
 
 fipall$class <- factor(fipall$class, levels=c("No Loan", "Pilot", "Farm Bill"),
                        labels = c("None", "Pilot", "Farm Bill"))
-levels(fipall$key) <- c("Population", "Mean Income", "Mean Wages", "Providers")
+levels(fipall$key) <- c("Population", "Mean Income", "Providers")
 
 ggplot(fipall, aes(x = year, y = value, colour = class, group = class)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "smooth", size = 2) +
