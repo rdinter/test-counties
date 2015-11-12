@@ -296,8 +296,12 @@ data$logWAGE      <- log(data$HHWAGE_IRS_R)
 data$ruc          <- factor(data$ruc03)
 levels(data$ruc)  <- list("metro" = 1:3, "adj" = c(4,6,8), "nonadj" = c(5,7,9))
 
-data$APay_        <- data$ap_ / data$emp_
-data$APay_R       <- data$ap_R_ / data$emp_
+data$APay_        <- data$ap_ / (data$emp_ + 1)
+data$APay_R       <- data$ap_R_ / (data$emp_ + 1)
+
+data$APay        <- data$ap / (data$emp_ + 1)
+data$APayR       <- data$ap_R / (data$emp_ + 1)
+
 
 write_csv(data, paste0(localDir, "/Final.csv"))
 save(data, file = paste0(localDir, "/Final.Rda"))

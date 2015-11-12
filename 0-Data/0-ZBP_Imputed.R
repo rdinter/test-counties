@@ -73,19 +73,7 @@ names(imputed) <- "imputed_ap"
 
 zbpimpute <- bind_cols(zbpimpute, imputed)
 zbpimpute <- zbpimpute %>% rowwise() %>%
-  mutate(ap_ = imputed_ap,
-         ap_ = ifelse(empflag == "A", max(min(ap_, 19), 0), ap_),
-         ap_ = ifelse(empflag == "B", max(min(ap_, 99), 20), ap_),
-         ap_ = ifelse(empflag == "C", max(min(ap_, 249), 100), ap_),
-         ap_ = ifelse(empflag == "E", max(min(ap_, 499), 250), ap_),
-         ap_ = ifelse(empflag == "F", max(min(ap_, 999), 500), ap_),
-         ap_ = ifelse(empflag == "G", max(min(ap_, 2499), 1000), ap_),
-         ap_ = ifelse(empflag == "H", max(min(ap_, 4999), 2500), ap_),
-         ap_ = ifelse(empflag == "I", max(min(ap_, 9999), 5000), ap_),
-         ap_ = ifelse(empflag == "J", max(min(ap_, 24999), 10000), ap_),
-         ap_ = ifelse(empflag == "K", max(min(ap_, 49999), 25000), ap_),
-         ap_ = ifelse(empflag == "L", max(min(ap_, 99999), 50000), ap_),
-         ap_ = ifelse(empflag == "M", max(ap_, 100000), ap_))
+  mutate(ap_ = imputed_ap, ap_ = ifelse(empflag != "", max(ap_, 0), ap_))
 
 zbp9401 %>% filter(empflag == "") %>%
   bind_rows(zbpimpute) %>%
@@ -149,19 +137,7 @@ names(imputed) <- "imputed_ap"
 
 zbpimpute <- bind_cols(zbpimpute, imputed)
 zbpimpute <- zbpimpute %>% rowwise() %>%
-  mutate(ap_ = imputed_ap,
-         ap_ = ifelse(empflag == "A", max(min(ap_, 19), 0), ap_),
-         ap_ = ifelse(empflag == "B", max(min(ap_, 99), 20), ap_),
-         ap_ = ifelse(empflag == "C", max(min(ap_, 249), 100), ap_),
-         ap_ = ifelse(empflag == "E", max(min(ap_, 499), 250), ap_),
-         ap_ = ifelse(empflag == "F", max(min(ap_, 999), 500), ap_),
-         ap_ = ifelse(empflag == "G", max(min(ap_, 2499), 1000), ap_),
-         ap_ = ifelse(empflag == "H", max(min(ap_, 4999), 2500), ap_),
-         ap_ = ifelse(empflag == "I", max(min(ap_, 9999), 5000), ap_),
-         ap_ = ifelse(empflag == "J", max(min(ap_, 24999), 10000), ap_),
-         ap_ = ifelse(empflag == "K", max(min(ap_, 49999), 25000), ap_),
-         ap_ = ifelse(empflag == "L", max(min(ap_, 99999), 50000), ap_),
-         ap_ = ifelse(empflag == "M", max(ap_, 100000), ap_))
+  mutate(ap_ = imputed_ap, ap_ = ifelse(empflag != "", max(ap_, 0), ap_))
 
 zbp0213 %>% filter(empflag == "") %>%
   bind_rows(zbpimpute) %>%
