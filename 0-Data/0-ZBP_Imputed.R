@@ -24,11 +24,11 @@ summary(test)
 zbpimpute      <- filter(zbp9401, empflag != "")
 imputed        <- predict(test, zbpimpute)
 imputed        <- as.data.frame(round(imputed))
-names(imputed) <- "imputed"
+names(imputed) <- "imputed_emp"
 
 zbpimpute <- bind_cols(zbpimpute, imputed)
 zbpimpute <- zbpimpute %>% rowwise() %>%
-  mutate(emp_ = imputed,
+  mutate(emp_ = imputed_emp,
          emp_ = ifelse(empflag == "A", max(min(emp_, 19), 0), emp_),
          emp_ = ifelse(empflag == "B", max(min(emp_, 99), 20), emp_),
          emp_ = ifelse(empflag == "C", max(min(emp_, 249), 100), emp_),
@@ -60,10 +60,43 @@ zbp9401 %>% filter(empflag == "") %>%
 # L 50,000-99,999
 # M 100,000 or More
 
+# ---- Annual Payroll
+form <- formula(paste0("ap~", "factor(year)/(", indep, "- 1) - factor(year)"))
+
+test <- lm(form, filter(zbp9401, empflag == ""))
+summary(test)
+
+zbpimpute      <- filter(zbp9401, empflag != "")
+imputed        <- predict(test, zbpimpute)
+imputed        <- as.data.frame(round(imputed))
+names(imputed) <- "imputed_ap"
+
+zbpimpute <- bind_cols(zbpimpute, imputed)
+zbpimpute <- zbpimpute %>% rowwise() %>%
+  mutate(ap_ = imputed_ap,
+         ap_ = ifelse(empflag == "A", max(min(ap_, 19), 0), ap_),
+         ap_ = ifelse(empflag == "B", max(min(ap_, 99), 20), ap_),
+         ap_ = ifelse(empflag == "C", max(min(ap_, 249), 100), ap_),
+         ap_ = ifelse(empflag == "E", max(min(ap_, 499), 250), ap_),
+         ap_ = ifelse(empflag == "F", max(min(ap_, 999), 500), ap_),
+         ap_ = ifelse(empflag == "G", max(min(ap_, 2499), 1000), ap_),
+         ap_ = ifelse(empflag == "H", max(min(ap_, 4999), 2500), ap_),
+         ap_ = ifelse(empflag == "I", max(min(ap_, 9999), 5000), ap_),
+         ap_ = ifelse(empflag == "J", max(min(ap_, 24999), 10000), ap_),
+         ap_ = ifelse(empflag == "K", max(min(ap_, 49999), 25000), ap_),
+         ap_ = ifelse(empflag == "L", max(min(ap_, 99999), 50000), ap_),
+         ap_ = ifelse(empflag == "M", max(ap_, 100000), ap_))
+
+zbp9401 %>% filter(empflag == "") %>%
+  bind_rows(zbpimpute) %>%
+  mutate(ap_ = ifelse(is.na(ap_), ap, ap_)) %>% 
+  distinct() %>% 
+  full_join(z9401) -> z9401
+
 rm(zbp9401, zbpimpute, imputed)
 
 
-# From 2002 and beyond ----------------------------------------------------
+# ---- From 2002 and beyond -----------------------------------------------
 
 load("0-Data/ZBP/ZBPtotal02-13.Rda") # 2002 to 2013 data
 load("0-Data/ZBP/ZBPdetail02-13.Rda") # 2002 to 2013 data
@@ -73,17 +106,18 @@ rm(zbptot0213, zbpind0213)
 
 zbp0213$emp_nf <- ifelse(is.na(zbp0213$emp_nf), "", zbp0213$emp_nf)
 
+form <- formula(paste0("emp~", "factor(year)/(", indep, "- 1) - factor(year)"))
 test <- lm(form, filter(zbp0213, empflag == ""))
 summary(test)
 
 zbpimpute      <- filter(zbp0213, empflag != "")
 imputed        <- predict(test, zbpimpute)
 imputed        <- as.data.frame(round(imputed))
-names(imputed) <- "imputed"
+names(imputed) <- "imputed_emp"
 
 zbpimpute <- bind_cols(zbpimpute, imputed)
 zbpimpute <- zbpimpute %>% rowwise() %>%
-  mutate(emp_ = imputed,
+  mutate(emp_ = imputed_emp,
          emp_ = ifelse(empflag == "A", max(min(emp_, 19), 0), emp_),
          emp_ = ifelse(empflag == "B", max(min(emp_, 99), 20), emp_),
          emp_ = ifelse(empflag == "C", max(min(emp_, 249), 100), emp_),
@@ -102,6 +136,39 @@ zbp0213 %>% filter(empflag == "") %>%
   mutate(emp_ = ifelse(is.na(emp_), emp, emp_)) %>% 
   distinct() -> z0213
 
+# ---- Annual Payroll
+form <- formula(paste0("ap~", "factor(year)/(", indep, "- 1) - factor(year)"))
+
+test <- lm(form, filter(zbp0213, empflag == ""))
+summary(test)
+
+zbpimpute      <- filter(zbp0213, empflag != "")
+imputed        <- predict(test, zbpimpute)
+imputed        <- as.data.frame(round(imputed))
+names(imputed) <- "imputed_ap"
+
+zbpimpute <- bind_cols(zbpimpute, imputed)
+zbpimpute <- zbpimpute %>% rowwise() %>%
+  mutate(ap_ = imputed_ap,
+         ap_ = ifelse(empflag == "A", max(min(ap_, 19), 0), ap_),
+         ap_ = ifelse(empflag == "B", max(min(ap_, 99), 20), ap_),
+         ap_ = ifelse(empflag == "C", max(min(ap_, 249), 100), ap_),
+         ap_ = ifelse(empflag == "E", max(min(ap_, 499), 250), ap_),
+         ap_ = ifelse(empflag == "F", max(min(ap_, 999), 500), ap_),
+         ap_ = ifelse(empflag == "G", max(min(ap_, 2499), 1000), ap_),
+         ap_ = ifelse(empflag == "H", max(min(ap_, 4999), 2500), ap_),
+         ap_ = ifelse(empflag == "I", max(min(ap_, 9999), 5000), ap_),
+         ap_ = ifelse(empflag == "J", max(min(ap_, 24999), 10000), ap_),
+         ap_ = ifelse(empflag == "K", max(min(ap_, 49999), 25000), ap_),
+         ap_ = ifelse(empflag == "L", max(min(ap_, 99999), 50000), ap_),
+         ap_ = ifelse(empflag == "M", max(ap_, 100000), ap_))
+
+zbp0213 %>% filter(empflag == "") %>%
+  bind_rows(zbpimpute) %>%
+  mutate(ap_ = ifelse(is.na(ap_), ap, ap_)) %>% 
+  distinct() %>% 
+  full_join(z0213) -> z0213
+
 rm(zbp0213, zbpimpute, imputed)
 
 zbpimpute <- bind_rows(z9401, z0213)
@@ -111,7 +178,7 @@ save(zbpimpute, file = "0-Data/ZBP/ZBPimpute.Rda")
 
 zbpfull <- expand.grid(zip = unique(zbpimpute$zip),
                          year = unique(zbpimpute$year))
-zbpfull <- left_join(zbpfull, select(zbpimpute, zip, year, emp:year, emp_))
+zbpfull <- left_join(zbpfull, select(zbpimpute, zip, year, emp:year, ap_, emp_))
 
 library(zoo)
 zbpfull %>%

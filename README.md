@@ -54,6 +54,13 @@ library(cleangeo)
 
 Further, other packages needed include: `dplyr`, `ggplot2`, `jsonlite`, `maptools`, `pbapply`, `raster`, `RCurl`, `readr`, `readxl`, `rgdal`, `spdep`, `stringr`, `tidyr`.
 
+# Various To-Do Items:
+
+This is still currently a work in progress. At the moment, here are a few things I know that I will eventually need to tackle:
+
+1. Hosting various datasets (bb loans, FCC data, etc.) on a site so that R scripts are automated.
+2. Delve into the BEA API and sort through their various data. Document this as well.
+3. Convert Matlab code (for origin-destination models and potentially dynamic spatial ordered probit) to R scripts.
 
 <!--
 # Cheat Sheet

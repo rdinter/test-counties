@@ -10,6 +10,7 @@ library(dplyr)
 library(jsonlite)
 library(pbapply)
 library(RCurl)
+library(readr)
 library(tidyr)
 ## The following file assigns my BEA API key to the variable "bea.api.key"
 source("0-Data/api_keys.R")
@@ -215,7 +216,9 @@ errors <- gsub("ERROR", "", errors)
 #   bind_rows() %>%
 #   spread(Code, DataValue) -> data
 
-write_csv(RegionalData, paste0(localDir, "/RegionalData.csv"))
+# Currently, RegionalData is a list. So you cannot write a csv of a list
+
+# write_csv(RegionalData, paste0(localDir, "/RegionalData.csv"))
 save(RegionalData, file = paste0(localDir, "/RegionalData.Rda"))
 
 
@@ -282,7 +285,7 @@ GetDataIncome <- function(datasetname, tablename, linecode, geofips, year){
   return(data)
 }
 
-RegionalIncome <- GetDataIncome("RegionalIncome", parmsval$KeyCode$KeyCode,
+RegionalIncome <- GetDataIncome("RegionalIncome", "CA1", "1",
                          "COUNTY", "ALL")
 # Need to convert to numeric for some values ... quick diagnostic checks
 

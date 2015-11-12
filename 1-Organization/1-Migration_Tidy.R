@@ -4,10 +4,10 @@
 
 print(paste0("Started 1-Migration_Tidy at ", Sys.time()))
 
-suppressMessages(library(dplyr))
-suppressMessages(library(maptools))
-suppressMessages(library(readr))
-suppressMessages(library(tidyr))
+library(dplyr)
+library(maptools)
+library(readr)
+library(tidyr)
 
 # Create a directory for the data
 localDir <- "1-Organization/Migration"
@@ -86,7 +86,7 @@ temp <- allin %>%
   summarise_each(funs(sum(., na.rm = T)), Return_Num:Aggr_AGI)
 temp$State_Code_Origin  <- 98
 temp$County_Code_Origin <- 0
-allin <- bind_rows(allin, temp)
+allin                   <- bind_rows(allin, temp)
 
 # Finally, we need the US values of 97000 
 temp <- allin %>% 
@@ -108,7 +108,7 @@ temp <- allin %>%
 
 temp$State_Code_Origin  <- 97
 temp$County_Code_Origin <- 0
-allin <- bind_rows(allin, temp)
+allin                   <- bind_rows(allin, temp)
 
 allin$ofips <- 1000*allin$State_Code_Origin + allin$County_Code_Origin
 allin$dfips <- 1000*allin$State_Code_Dest + allin$County_Code_Dest
@@ -179,7 +179,7 @@ temp <- allout %>%
   summarise_each(funs(sum(., na.rm = T)), Return_Num:Aggr_AGI)
 temp$State_Code_Dest  <- 98
 temp$County_Code_Dest <- 0
-allout <- bind_rows(allout, temp)
+allout                <- bind_rows(allout, temp)
 
 # Finally, we need the US values of 97000 
 temp <- allout %>% 
@@ -200,7 +200,7 @@ temp <- allout %>%
   select(year:County_Code_Dest, Return_Num:Aggr_AGI)
 temp$State_Code_Dest  <- 97
 temp$County_Code_Dest <- 0
-allout <- bind_rows(allout, temp)
+allout                <- bind_rows(allout, temp)
 
 allout$ofips <- 1000*allout$State_Code_Origin + allout$County_Code_Origin
 allout$dfips <- 1000*allout$State_Code_Dest + allout$County_Code_Dest
@@ -377,7 +377,7 @@ save(ctycty, file = paste0(localDir, "/ctycty.Rda"))
 
 rm(allin, allout, coords, data, incty, outcty)
 # ---- Controls -----------------------------------------------------------
-load("0-Data/IRS/CTYPop.Rda")
+load("0-Data/IRS/CTYPop.Rda") # Population, Households, Income for county
 
 # Add in controls...
 
