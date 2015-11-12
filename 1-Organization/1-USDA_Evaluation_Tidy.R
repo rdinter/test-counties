@@ -262,6 +262,7 @@ data %>%
          Dividends_IRS_R = Dividends_IRS*166.583 / CPI,
          Interest_IRS_R  = Interest_IRS*166.583 / CPI,
          ap_R            = ap*166.583 / CPI,
+         ap_R_           = ap_*166.583 / CPI,
          qp1_R           = qp1*166.583 / CPI) -> data
 
 # Indicators for Loans at some point in time....
@@ -294,6 +295,9 @@ data$logINC       <- ifelse(data$HHINC_IRS_R < 1, 0, log(data$HHINC_IRS_R))
 data$logWAGE      <- log(data$HHWAGE_IRS_R)
 data$ruc          <- factor(data$ruc03)
 levels(data$ruc)  <- list("metro" = 1:3, "adj" = c(4,6,8), "nonadj" = c(5,7,9))
+
+data$APay_        <- data$ap_ / data$emp_
+data$APay_R       <- data$ap_R_ / data$emp_
 
 write_csv(data, paste0(localDir, "/Final.csv"))
 save(data, file = paste0(localDir, "/Final.Rda"))
