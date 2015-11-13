@@ -15,7 +15,8 @@ localDir <- "2-Exploratory/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
 load("1-Organization/USDA_Evaluation/Final.Rda")
-
+# ----
+cor(data$AREA_zcta, data$est) # Relationship between area and establishments.
 # ---- Zip time -----------------------------------------------------------
 hp <- ggplot(data, aes(x = Prov_hist)) + geom_histogram() +
   coord_cartesian(xlim = c(0, 15)) 
@@ -76,7 +77,7 @@ ggplot(ggloans, aes(x = year, y = loans)) + geom_line() + theme_minimal() +
   scale_y_continuous(breaks = seq(0, 3000, 500)) +
   geom_vline(xintercept = 2002, color = "black", linetype = "longdash") +
   geom_vline(xintercept = 2004, color = "red", linetype = "longdash") +
-  labs(x = "", y = "Cumulative Loans Awarded by Zip Code")#,
+  labs(x = "", y = "Cumulative Zip Codes Awarded Loans")#,
        #title = "USDA Loans by Zip Code \n Across Time")
 ggsave(paste0(localDir, "/Loan_award_time.png"), width = 10, height = 7.5)
 
@@ -154,7 +155,8 @@ pta$AREA <- paste0(pta$AREA, " (", pta$AREASD, ")")
 pta <- select(pta, year:n, Providers, Establishments, Employed, TRI, AREA)
 
 write.csv(pta, paste0(localDir, "/Zip_Stats.csv"), row.names = F)
-stargazer(pta, summary = F, rownames = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/Zip_Stats.tex"))
 
 
 # ---- Zip Attributes Graph -----------------------------------------------
@@ -288,7 +290,8 @@ pta$Population <- paste0(pta$PopIRSm, " (", pta$PopIRSSD, ")")
 pta$Income <- paste0(pta$HHIncIRSm, " (", pta$HHIncIRSSD, ")")
 pta <- select(pta, year:n, Providers, Population, Income)
 write.csv(pta, paste0(localDir, "/Fips_Stats.csv"), row.names = F)
-stargazer(pta, summary = F, rownames = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/Fips_Stats.tex"))
 
 
 # ---- FIP Attributes Graph -----------------------------------------------
@@ -350,8 +353,11 @@ RUC %>%
   summarise(tots = format(sum(zero, na.rm = T), big.mark = ","),
             per = sprintf("(%.1f%%)", 100*sum(zero, na.rm = T) / n())) %>% 
   unite(temp, tots, per, sep = " ") %>% 
-  spread(loantype, temp) %>% 
-  knitr::kable(caption = "Zip Codes Without Access")
+  spread(loantype, temp) -> temp
+knitr::kable(temp, caption = "ZIP Codes Without Access")
+write.csv(temp, paste0(localDir, "/ZIP_loan_time.csv"), row.names = F)
+stargazer(temp, summary = F, rownames = F,
+          out = paste0(localDir, "/ZIP_loan_time.tex"))
 
 # RUC %>%
 #   group_by(loantype, time) %>%
@@ -376,6 +382,8 @@ RUC %>%
                                              n())) -> temp
 knitr::kable(temp, caption = "County Class by Loan Type")
 write.csv(temp, paste0(localDir, "/Fips_class_loan.csv"), row.names = F)
+stargazer(temp, summary = F, rownames = F,
+          out = paste0(localDir, "/Fips_class_loan.tex"))
 
 # ---- RUC graph ----------------------------------------------------------
 temp <- RUC %>%

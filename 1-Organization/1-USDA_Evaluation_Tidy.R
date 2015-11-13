@@ -263,6 +263,7 @@ data %>%
          Interest_IRS_R  = Interest_IRS*166.583 / CPI,
          ap_R            = ap*166.583 / CPI,
          ap_R_           = ap_*166.583 / CPI,
+         ap_R2           = ap2*166.583 / CPI,
          qp1_R           = qp1*166.583 / CPI) -> data
 
 # Indicators for Loans at some point in time....
@@ -296,11 +297,18 @@ data$logWAGE      <- log(data$HHWAGE_IRS_R)
 data$ruc          <- factor(data$ruc03)
 levels(data$ruc)  <- list("metro" = 1:3, "adj" = c(4,6,8), "nonadj" = c(5,7,9))
 
+# In case it is important to use approximation of income at ZIP level
 data$APay_        <- data$ap_ / (data$emp_ + 1)
 data$APay_R       <- data$ap_R_ / (data$emp_ + 1)
+data$logAPay_R    <- ifelse(data$APay_R < 1, 0, log(data$APay_R))
 
-data$APay        <- data$ap / (data$emp_ + 1)
-data$APayR       <- data$ap_R / (data$emp_ + 1)
+data$APay_2       <- data$ap2 / (data$emp_ + 1)
+data$APay_R2      <- data$ap_R2 / (data$emp_ + 1)
+data$logAPay_R2   <- ifelse(data$APay_R < 1, 0, log(data$APay_R))
+
+data$APay         <- data$ap / (data$emp_ + 1)
+data$APayR        <- data$ap_R / (data$emp_ + 1)
+data$logAPayR     <- ifelse(data$APayR < 1, 0, log(data$APayR))
 
 
 write_csv(data, paste0(localDir, "/Final.csv"))

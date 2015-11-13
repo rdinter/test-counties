@@ -154,7 +154,13 @@ save(zbpimpute, file = "0-Data/ZBP/ZBPimpute.Rda")
 
 zbpfull <- expand.grid(zip = unique(zbpimpute$zip),
                          year = unique(zbpimpute$year))
-zbpfull <- left_join(zbpfull, select(zbpimpute, zip, year, emp:year, ap_, emp_))
+zbpfull <- left_join(zbpfull,
+                     select(zbpimpute, zip, year, emp:year, ap_, emp_, empflag))
+
+# Imputed Employee and Payroll through NA
+zbpfull$emp2    <- ifelse(zbpfull$empflag == "", zbpfull$emp, NA)
+zbpfull$ap2     <- ifelse(zbpfull$empflag == "", zbpfull$ap, NA)
+zbpfull$empflag <- NULL # need to get rid of character variables (na.locf)
 
 library(zoo)
 zbpfull %>%
