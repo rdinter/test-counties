@@ -1,0 +1,177 @@
+---
+title: "4-USDA Evaluation CAR Problem"
+author: "Robert Dinterman"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r, include=FALSE}
+library(knitr)
+opts_knit$set(root.dir = normalizePath(".."))
+read_chunk("4-USDA_Evaluation_CAR_Problem.R")
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, dev='png')
+```
+
+```{r load, include=FALSE}
+<<Start>>
+```
+
+# Poisson Panel Regressions for Broadband Availability
+
+The following regressions make use of the `glm` function for generalized linear models in `R` in order to identify the relationship between broadband availability and the USDA Broadband Loan Program. Loosely, we wish to model the number of broadband providers by zip code across the years 1999 to 2008 and determine whether or not the USDA Broadband Loan Program had an impact on broadband availability as this was one of the intended benefits of the subsidized loans. As a quick reference, here is what the dependent variable looks like across time:
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+hp <- ggplot(data, aes(x = Prov_hist)) + geom_histogram(binwidth = 1) + theme_minimal()
+grid.arrange(hp + scale_x_discrete(breaks = c(5, 10, 15, 20, 25)) +
+               labs(title = "Number of Providers (Pooled)", x= "", y = "Count"),
+             hp + scale_x_discrete(breaks = c(5, 10, 15)) + facet_wrap(~ time) +
+               coord_cartesian(xlim = c(0, 15)) +
+               labs(title = "Across Time", x= "", y = ""),
+             ncol = 2)
+```
+
+***Suppressed values were drawn from a uniform distribution between 1 and 3 for visual purposes.***
+
+Data on broadband providers is measured twice a year (June 30 and December 31) and takes on a count value of 0, 1-3\*, 4, 5, 6, ... 31. The value 1-3\* is a suppressed value of broadband providers for confidentiality purposes and has been coded as 2 to be consistent with the literature. In the sample, the mean across all years for providers is `r format(mean(round(data$Prov_num)), digits = 2)` and a sample variance of `r format(var(round(data$Prov_num)), digits = 2)`. ~~For a Poisson distribution, the mean and variance are restricted to be equal which indicates here that the unconditional distribution is not likely to be Poisson. This may be troublesome if the conditional mean and variance of the model differ by as much as the sample mean and variance. Therefore, Quasi-Poisson and Negative Binomial models are also considered (and likely to be the true process).~~ (difference was not substantial enough to merit the use of other distributions)
+
+Other variables used include:
+
+* `iloans` - an indicator variable for whether or not a zip code received a loan and the central focus. No loans were given before 2002, so this variable does vary by time. This can be broken down further to `ipilot` to indicate the smaller Pilot program which lasted from 2001 to 2003 and disbursed 28 loans totaling \$180 million as well as the Post-Pilot program, `ibip1234`, which was established by the 2002 Farm Bill. The Post-Pilot program began disbursing loans in 2003 and we have data until 2006 which totals \$1.22 billion across 70 loans.
+* `log(est)` - this is from zip code business pattern data and is the number of establishments in a particular zip code. I take the log of this variable because the distribution is right-skewed. It is possible to substitute this variable with number of employees, annual payroll, or first quarter payroll from the ZBP but I choose not to because those variables are **suppressed for approximately `r paste0(format(sum(data$ap == 0) / sum(!is.na(data$ap))*100, digits = 2), "%")` of the zip codes**. Establishments is highly correlated with the other variables anyway, so I would rather use a less precise proxy than potentially bias the sample.
+* `log(Pop_IRS)` - IRS has data on number of tax returns filed by county from 1989 until 2013. I use the number of exemptions per county as a way to proxy for the population of a county. This variable is also right-skewed and therefore the log of population is taken instead of population. The alternative for population would be to use US Census data which produce yearly estimates at the county level. These estimates are based off of the 2000 Census and use the demographic age distribution of a county in order to project forward the birth rate and death rate to determine what the population in a county should be. Since this is simply a function of initial conditions in 2000, I choose to use IRS data because there is more variation in the data and it reflects changes in economic conditions across counties that would drive migration (population change).
+* `logAPay_R2` - this also comes from the ZIP code business pattern data and is the total annual payroll for all establishments in the ZIP code divided by the number of employees. This proxies for wages and income to a degree. The suppressed values are replaced with the national average which would have the effect of dampening any effect. Suppressed values are not necessarily because of a low number of establishments in a ZIP code as it could also result from disclosure reasons as to not identify a dominant firm in a ZIP code. Since the focus of this analysis is on the effect of broadband loans on the number of providers, the only concern I would have with the suppression issues is if they systematically affected both the loans and the number of broadband providers.
+* `tri` - stands for Terrain Ruggedness Index which uses elevation data for a given polygon to calculate the feature changes in a given area relative to the entire domain. This is at the ZCTA level across the United States and is thought of as a proxy for increased costs of broadband deployment due to rough terrain. This does not vary across years and so zip code fixed effects will take away this variable.
+* `ruc` - the rural-urban continuum code, but for this study I simply use 3 classifications of a county: Metro, Rural but adjacent to a metro county, and Rural but non-adjacent to a metro county. Counties do change across time, but only in years that end in 3 (1993, 2003, ...). I choose to use the values for 2003 as this would be a little bit before the halfway point in the analysis.
+
+## Poisson Regression Models
+
+I start with by making use of the count nature of the broadband providers variable by assuming it follows a Poisson distribution:
+
+$$ {Prov}_{z,t} | X_{z,t}, \beta \sim {Pois}  \left( \lambda_{z,t} \right)
+$$
+$$ log \left( \lambda_{z,t} \right) = \beta_0 + \beta_1 {Loan}_{z,t} + \beta_2 X_{z,t} + \tau_{t} + \varepsilon_{z,t}$$
+
+The variable ${Prov}_{z,t}$ is the number of providers in zip code $z$ at time $t$. The $X_{z,t}$ are variables at the zip code or county level that determine the level of broadband providers. These are log of establishments, log of population, log of income, terrain ruggedness index, and rural: adjacent and non-adjacent. There is also a time fixed effect for each year included in these regressions. The biannual values for the provider numbers gives a panel dataset where T = `r length(unique(data$time))` and n = `r length(unique(data$zip))`.
+
+As a naive start to use of the Poisson distribution, I will start with two models: the first without time fixed effects and the second including these. An ANOVA test to determine whether the time fixed effects are jointly significant is performed at the bottom which provides evidence of time fixed effects as a significant predictor of broadband diffusion:
+
+```{r Biannual}
+<<Biannual>>
+```
+
+The associated coefficients appear to jive with expectations. There is a positive association with establishments, population, income, and metro setting. Further, tri and rural areas (non-adjacent even more) are associated with lower levels of broadband access.
+
+# Spatial Effects
+I cannot get the package `CARBayesST` to run when I use all 30,000 ZIP codes across 18 time periods, but I can do this for Minnesota. Minnesota is a good candidate for examining spatial effects of the broadband loan programs because it is a state that received both Pilot and Farm Bill loans to both Metro and Rural areas. I begin with a recap of the previous results across MLE estimates of the Poisson models and relevant summary statistics:
+
+## Minnesota
+
+```{r}
+hp <- ggplot(STdata, aes(x = Prov_hist)) + geom_histogram(binwidth = 1) + theme_minimal()
+grid.arrange(hp + scale_x_discrete(breaks = c(5, 10, 15, 20, 25)) +
+               labs(title = "Number of Providers (Pooled)", x= "", y = "Count"),
+             hp + scale_x_discrete(breaks = c(5, 10, 15)) + facet_wrap(~ time) +
+               coord_cartesian(xlim = c(0, 15)) +
+               labs(title = "Across Time", x= "", y = ""),
+             ncol = 2)
+```
+
+The first step is to run the aspatial Poisson models with Minnesota to verify similar results to the rest of the United States:
+
+```{r Aspatial Poisson}
+<<Aspatial Poisson>>
+```
+
+The time fixed effects are still significant as seen with the F-test at the bottom of the output above. The major concern is that the coefficients across the Minnesota model and the United States model are similar and for the model without time fixed effects this is generally the case with exception to `tri` and `rucadj` having different signs and `logAPay_R2` having a stronger effect for Minnesota. The standard errors are noticeably larger for the Minnesota regression which is to be expected when reducing the number of ZIP codes. For the time effects, a the coefficient on `iloans` is larger for Minnesota while the same issues with `tri`, `rucadj`, and `logAPay_R2` arise. There may be better candidate states (Texas and Missouri come to mind while looking at the map of the broadband loan program disbursement), but Minnesota still seems plausible to analyze for spatial effects.
+
+Next, I run the previous models as Bayesian models for comparability of MLE and Bayesian results (and because I have only been able to figure out how to implement spatial models with Bayesian methods):
+
+```{r Bayes Poisson}
+<<Bayes Poisson>>
+```
+
+The time fixed effects model is running into problems with estimation, likely due to the number of parameters to estimate. Either way, the spatial methods used below account for time fixed effects as a random effect and that is good enough for me as I do not care about the estimates on the time fixed effects but only wish to control for the diffusion process of broadband.
+
+I now turn to the `CARBayesST` package in `R` to estimate three separate spatial models. The package models spatio-temporal autocorrelation by random effects, which are assigned conditional autoregressive (CAR) prior distributions. The weight matrix used for the estimation procedure is through a contiguity based, where I present the Moran's I test results for residual spatial correlation for each time period of the preferred Poisson model with time fixed effects:
+
+```{r Moran}
+<<Moran>>
+```
+
+Those are extremely small p-values, so I am a little concerned about having screwed something up. But across the board there appears to be positive spatial autocorrelation in each time period, although it appears to trend downward from 1999 until 2004 then tick back up. I believe there was a bill in 2005 which deregulated an aspect of the broadband market and this may be the source of spatial autocorrelation. I have made a note to double check the regulation, but the important aspect here is that there appears to be spatial autocorrelation that I should attempt to account for to see if the main result related to the broadband loan program still holds. I next inspect a few Bayesian models which are explained in some more depth through the [CARBayesST Vignette](https://cran.r-project.org/web/packages/CARBayesST/vignettes/CARBayesSTvignette.pdf). All spatial models begin in the form of:
+
+$$ {Prov}_{z,t} | X_{z,t}, \beta \sim {Pois}  \left( \lambda_{z,t} \right)
+$$
+$$ log \left( \lambda_{z,t} \right) = \beta_0 + \beta_1 {Loan}_{z,t} + \beta_2 X_{z,t} + M_{z,t}$$
+
+where the $M_{z,t}$ term is a latent component for ZIP code $z$ and time period $t$ that captures spatio-temporal autocorrelation. This term takes on different functional forms in the `CARBayesST` package, checking to see how much the term associated with the broadband loan programs changes is the main interest here. If there are large changes, this likely indicates that spatial dependence is an issue in evaluating the broadband loan programs. The spatial model which best fits the data would be most appropriate for evaluation. However, if the coefficients of interest do not substantially change, this would indicate that the broadband loan programs are not affected by the spatial nature of broadband diffusion. Spatial methods, while potentially a better fit, may not be appropriate and could hinder efficiency of estimates.
+
+The first spatial model is ST.CARanova, which models the $M_{z,t}$ term as:
+
+$$ M_{z,t} = \phi_{z} + \delta_{t} + \gamma_{z,t}, $$
+$$ \phi_{z}|\phi_{-z}, \mathbf{W} \sim N \left( \frac{\rho_{\phi} \mathbf{W}\phi_{j}}{\rho_{\phi} \mathbf{W} + 1 - \rho_{\phi}}, \frac{\tau_{\phi}^2}{\rho_{\phi} \mathbf{W} + 1 - \rho_{\phi}} \right) $$
+$$ \delta_{t}|\delta_{-t}, \mathbf{D} \sim N \left( \frac{\rho_{\delta} \mathbf{D}\delta_{j}}{\rho_{\delta} \mathbf{D} + 1 - \rho_{\delta}}, \frac{\tau_{\delta}^2}{\rho_{\delta} \mathbf{D} + 1 - \rho_{\delta}} \right) $$
+$$ \gamma_{z,t} \sim N(0,\tau_{\gamma}^2) $$
+$$ \tau_{\phi}^2, \tau_{\delta}^2, \tau_{\gamma}^2 \sim \text{Inverse-Gamma}(a,b) $$
+$$ \rho_{\phi}, \rho_{\delta} \sim \text{Uniform}(0,1) $$
+
+where **D** is a $T \times T$ temporal neighborhood matrix where the elements equal 1 for time periods before and after that of interest.
+
+```{r ST.CARanova, echo=FALSE}
+<<ST.CARanova>>
+```
+
+I am a little perplexed with the documentation on the model and the `lambda` term as it does not show up anywhere. I *think* that the `lambda` term is really the $\rho_{\delta}$ term and the `rho` term is the $\rho_{\phi}$ term. But, we can verify how the residual dependence declines through Moran's I tests:
+
+```{r Moran anova, echo=FALSE}
+<<Moran anova>>
+```
+
+Next, we have ST.CARsepspatial:
+
+$$ M_{z,t} = \phi_{z,t} + \delta_{t}, $$
+$$ \phi_{z,t}|\phi_{-z,t}, \mathbf{W} \sim N \left( \frac{\rho \mathbf{W}\phi_{t}}{\rho \mathbf{W} + 1 - \rho}, \frac{\tau_{\phi}^2}{\rho \mathbf{W} + 1 - \rho} \right) $$
+$$ \delta_{t}|\delta_{t-1} \sim N \left(\delta_{t-1}, \tau_{\delta}^2 \right), $$
+$$ \tau_{\phi}^2, \tau_{\delta}^2 \sim \text{Inverse-Gamma}(a,b) $$
+$$ \rho \sim \text{Uniform}(0,1) $$
+
+```{r ST.CARsepspatial, echo=FALSE}
+<<ST.CARsepspatial>>
+```
+
+The decline in dependence:
+
+```{r Moran sepspatial, echo=FALSE}
+<<Moran sepspatial>>
+```
+
+And finally, ST.CARar:
+
+$$ M_{z,t} = \phi_{z,t}, $$
+$$ \phi_{t}|\phi_{t-1} \sim N \left( \gamma \phi_{t-1}, \tau^2 \mathbf{Q} \left(\mathbf{W}, \rho \right)^{-1} \right) t=2, \ldots , T,$$
+$$ \phi_{1} \sim N \left( 0, \tau^2 \mathbf{Q} \left(\mathbf{W}, \rho \right)^{-1} \right) $$
+$$ \tau^2 \sim \text{Inverse-Gamma}(a,b) $$
+$$ \rho, \gamma \sim \text{Uniform}(0,1) $$
+
+with:
+
+$$ \mathbf{Q} \left( \mathbf{W}, \rho \right) = \rho \left( \text{diag} \left( \mathbf{W1} \right) - \mathbf{W} \right) + \left( 1 - \rho \right)\mathbf{I} $$
+
+```{r ST.CARar, echo=FALSE}
+<<ST.CARar>>
+```
+
+And lastly, the decline in dependence:
+
+```{r Moran ar, echo=FALSE}
+<<Moran ar>>
+```
+
+It appears that across the spatial models, the effects on the loans are similar. Which is really all I want to show. We *can* account for Spatial effects, but the result for the broadband loan program appears to be robust across models. Further, it appears that the `ar` model is best at alleviating the spatial correlation as evidenced by the Moran's I tests. So I am contempt with this loose analysis, but I would prefer for this to be shown at a larger scale than 1 state.
+
+But why can't I get this to work for the entire United States? Is it because 30,000 ZIP codes across 18 time periods (about half a million observations) too computationally intensive? Or is the `CARBayesST` package not the best option for computing a spatio-temporal model? I only have a loose understanding of the OpenBUGS software but that might be my best option.
