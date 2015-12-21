@@ -1,4 +1,4 @@
-#Robert Dinterman, NCSU Economics PhD Student
+#Robert Dinterman
 
 print(paste0("Started 0-IRS_Pop at ", Sys.time()))
 

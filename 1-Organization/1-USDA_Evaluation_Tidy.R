@@ -264,7 +264,9 @@ data %>%
          ap_R            = ap*166.583 / CPI,
          ap_R_           = ap_*166.583 / CPI,
          ap_R2           = ap2*166.583 / CPI,
-         qp1_R           = qp1*166.583 / CPI) -> data
+         qp1_R           = qp1*166.583 / CPI,
+         qp1_R_          = qp1_*166.583 / CPI,
+         qp1_R2          = qp12*166.583 / CPI) -> data
 
 # Indicators for Loans at some point in time....
 data %>%
@@ -298,17 +300,38 @@ data$ruc          <- factor(data$ruc03)
 levels(data$ruc)  <- list("metro" = 1:3, "adj" = c(4,6,8), "nonadj" = c(5,7,9))
 
 # In case it is important to use approximation of income at ZIP level
+data$APay         <- data$ap / (data$emp_ + 1)
+data$APayR        <- data$ap_R / (data$emp_ + 1)
+data$logAPayR     <- ifelse(data$APayR < 1, 0, log(data$APayR))
+
 data$APay_        <- data$ap_ / (data$emp_ + 1)
 data$APay_R       <- data$ap_R_ / (data$emp_ + 1)
 data$logAPay_R    <- ifelse(data$APay_R < 1, 0, log(data$APay_R))
 
-data$APay_2       <- data$ap2 / (data$emp_ + 1)
-data$APay_R2      <- data$ap_R2 / (data$emp_ + 1)
-data$logAPay_R2   <- ifelse(data$APay_R < 1, 0, log(data$APay_R))
+data$APay_2       <- data$ap2 / (data$emp2 + 1)
+data$APay_2       <- ifelse(is.na(data$APay_2), mean(data$APay_2, na.rm = T),
+                            data$APay_2)
+data$APay_R2      <- data$ap_R2 / (data$emp2 + 1)
+data$APay_R2      <- ifelse(is.na(data$APay_R2), mean(data$APay_R2, na.rm = T),
+                            data$APay_R2)
+data$logAPay_R2   <- ifelse(data$APay_R2 < 1, 0, log(data$APay_R2))
 
-data$APay         <- data$ap / (data$emp_ + 1)
-data$APayR        <- data$ap_R / (data$emp_ + 1)
-data$logAPayR     <- ifelse(data$APayR < 1, 0, log(data$APayR))
+# Quarterly Payroll
+data$QPay         <- data$qp1 / (data$emp_ + 1)
+data$QPayR        <- data$qp1_R / (data$emp_ + 1)
+data$logQPayR     <- ifelse(data$QPayR < 1, 0, log(data$QPayR))
+
+data$QPay_        <- data$qp1_ / (data$emp_ + 1)
+data$QPay_R       <- data$qp1_R_ / (data$emp_ + 1)
+data$logQPay_R    <- ifelse(data$QPay_R < 1, 0, log(data$QPay_R))
+
+data$QPay_2       <- data$qp12 / (data$emp2 + 1)
+data$QPay_2       <- ifelse(is.na(data$QPay_2), mean(data$QPay_2, na.rm = T),
+                            data$QPay_2)
+data$QPay_R2      <- data$qp1_R2 / (data$emp2 + 1)
+data$QPay_R2      <- ifelse(is.na(data$QPay_R2), mean(data$QPay_R2, na.rm = T),
+                            data$QPay_R2)
+data$logQPay_R2   <- ifelse(data$QPay_R2 < 1, 0, log(data$QPay_R2))
 
 
 write_csv(data, paste0(localDir, "/Final.csv"))

@@ -18,10 +18,10 @@ indep <- paste("n1_4", "n5_9", "n10_19", "n20_49", "n50_99", "n100_249",
                "n250_499", "n500_999", "n1000", sep = "+")
 form <- formula(paste0("emp~", "factor(year)/(", indep, "- 1) - factor(year)"))
 
-test <- lm(form, filter(zbp9401, empflag == ""))
+test <- lm(form, filter(zbp9401, is.na(empflag)))
 summary(test)
 
-zbpimpute      <- filter(zbp9401, empflag != "")
+zbpimpute      <- filter(zbp9401, !is.na(empflag))
 imputed        <- predict(test, zbpimpute)
 imputed        <- as.data.frame(round(imputed))
 names(imputed) <- "imputed_emp"
@@ -42,7 +42,7 @@ zbpimpute <- zbpimpute %>% rowwise() %>%
          emp_ = ifelse(empflag == "L", max(min(emp_, 99999), 50000), emp_),
          emp_ = ifelse(empflag == "M", max(emp_, 100000), emp_))
 
-zbp9401 %>% filter(empflag == "") %>%
+zbp9401 %>% filter(is.na(empflag)) %>%
   bind_rows(zbpimpute) %>%
   mutate(emp_ = ifelse(is.na(emp_), emp, emp_)) %>% 
   distinct() -> z9401
@@ -63,21 +63,42 @@ zbp9401 %>% filter(empflag == "") %>%
 # ---- Annual Payroll
 form <- formula(paste0("ap~", "factor(year)/(", indep, "- 1) - factor(year)"))
 
-test <- lm(form, filter(zbp9401, empflag == ""))
+test <- lm(form, filter(zbp9401, is.na(empflag)))
 summary(test)
 
-zbpimpute      <- filter(zbp9401, empflag != "")
+zbpimpute      <- filter(zbp9401, !is.na(empflag))
 imputed        <- predict(test, zbpimpute)
 imputed        <- as.data.frame(round(imputed))
 names(imputed) <- "imputed_ap"
 
 zbpimpute <- bind_cols(zbpimpute, imputed)
 zbpimpute <- zbpimpute %>% rowwise() %>%
-  mutate(ap_ = imputed_ap, ap_ = ifelse(empflag != "", max(ap_, 0), ap_))
+  mutate(ap_ = imputed_ap, ap_ = ifelse(!is.na(empflag), max(ap_, 0), ap_))
 
-zbp9401 %>% filter(empflag == "") %>%
+zbp9401 %>% filter(is.na(empflag)) %>%
   bind_rows(zbpimpute) %>%
   mutate(ap_ = ifelse(is.na(ap_), ap, ap_)) %>% 
+  distinct() %>% 
+  full_join(z9401) -> z9401
+
+# ---- Quarterly Payroll
+form <- formula(paste0("qp1~", "factor(year)/(", indep, "- 1) - factor(year)"))
+
+test <- lm(form, filter(zbp9401, is.na(empflag)))
+summary(test)
+
+zbpimpute      <- filter(zbp9401, !is.na(empflag))
+imputed        <- predict(test, zbpimpute)
+imputed        <- as.data.frame(round(imputed))
+names(imputed) <- "imputed_qp1"
+
+zbpimpute <- bind_cols(zbpimpute, imputed)
+zbpimpute <- zbpimpute %>% rowwise() %>%
+  mutate(qp1_ = imputed_qp1, qp1_ = ifelse(!is.na(empflag), max(qp1_, 0), qp1_))
+
+zbp9401 %>% filter(is.na(empflag)) %>%
+  bind_rows(zbpimpute) %>%
+  mutate(qp1_ = ifelse(is.na(qp1_), qp1, qp1_)) %>% 
   distinct() %>% 
   full_join(z9401) -> z9401
 
@@ -95,10 +116,10 @@ rm(zbptot0213, zbpind0213)
 zbp0213$emp_nf <- ifelse(is.na(zbp0213$emp_nf), "", zbp0213$emp_nf)
 
 form <- formula(paste0("emp~", "factor(year)/(", indep, "- 1) - factor(year)"))
-test <- lm(form, filter(zbp0213, empflag == ""))
+test <- lm(form, filter(zbp0213, is.na(empflag)))
 summary(test)
 
-zbpimpute      <- filter(zbp0213, empflag != "")
+zbpimpute      <- filter(zbp0213, !is.na(empflag))
 imputed        <- predict(test, zbpimpute)
 imputed        <- as.data.frame(round(imputed))
 names(imputed) <- "imputed_emp"
@@ -119,7 +140,7 @@ zbpimpute <- zbpimpute %>% rowwise() %>%
          emp_ = ifelse(empflag == "L", max(min(emp_, 99999), 50000), emp_),
          emp_ = ifelse(empflag == "M", max(emp_, 100000), emp_))
 
-zbp0213 %>% filter(empflag == "") %>%
+zbp0213 %>% filter(is.na(empflag)) %>%
   bind_rows(zbpimpute) %>%
   mutate(emp_ = ifelse(is.na(emp_), emp, emp_)) %>% 
   distinct() -> z0213
@@ -127,39 +148,63 @@ zbp0213 %>% filter(empflag == "") %>%
 # ---- Annual Payroll
 form <- formula(paste0("ap~", "factor(year)/(", indep, "- 1) - factor(year)"))
 
-test <- lm(form, filter(zbp0213, empflag == ""))
+test <- lm(form, filter(zbp0213, is.na(empflag)))
 summary(test)
 
-zbpimpute      <- filter(zbp0213, empflag != "")
+zbpimpute      <- filter(zbp0213, !is.na(empflag))
 imputed        <- predict(test, zbpimpute)
 imputed        <- as.data.frame(round(imputed))
 names(imputed) <- "imputed_ap"
 
 zbpimpute <- bind_cols(zbpimpute, imputed)
 zbpimpute <- zbpimpute %>% rowwise() %>%
-  mutate(ap_ = imputed_ap, ap_ = ifelse(empflag != "", max(ap_, 0), ap_))
+  mutate(ap_ = imputed_ap, ap_ = ifelse(!is.na(empflag), max(ap_, 0), ap_))
 
-zbp0213 %>% filter(empflag == "") %>%
+zbp0213 %>% filter(is.na(empflag)) %>%
   bind_rows(zbpimpute) %>%
   mutate(ap_ = ifelse(is.na(ap_), ap, ap_)) %>% 
   distinct() %>% 
   full_join(z0213) -> z0213
 
+# ---- Quarterly Payroll
+form <- formula(paste0("qp1~", "factor(year)/(", indep, "- 1) - factor(year)"))
+
+test <- lm(form, filter(zbp0213, is.na(empflag)))
+summary(test)
+
+zbpimpute      <- filter(zbp0213, !is.na(empflag))
+imputed        <- predict(test, zbpimpute)
+imputed        <- as.data.frame(round(imputed))
+names(imputed) <- "imputed_qp1"
+
+zbpimpute <- bind_cols(zbpimpute, imputed)
+zbpimpute <- zbpimpute %>% rowwise() %>%
+  mutate(qp1_ = imputed_qp1, qp1_ = ifelse(!is.na(empflag), max(qp1_, 0), qp1_))
+
+zbp0213 %>% filter(is.na(empflag)) %>%
+  bind_rows(zbpimpute) %>%
+  mutate(qp1_ = ifelse(is.na(qp1_), qp1, qp1_)) %>% 
+  distinct() %>% 
+  full_join(z0213) -> z0213
+
 rm(zbp0213, zbpimpute, imputed)
 
-zbpimpute <- bind_rows(z9401, z0213)
+zbpimpute     <- bind_rows(z9401, z0213)
+zbpimpute$zip <- as.numeric(zbpimpute$zip)
 
 write_csv(zbpimpute, path = "0-Data/ZBP/ZBPimpute.csv")
 save(zbpimpute, file = "0-Data/ZBP/ZBPimpute.Rda")
 
 zbpfull <- expand.grid(zip = unique(zbpimpute$zip),
-                         year = unique(zbpimpute$year))
-zbpfull <- left_join(zbpfull,
-                     select(zbpimpute, zip, year, emp:year, ap_, emp_, empflag))
+                       year = unique(zbpimpute$year))
+zbpimpute %>% 
+  select(zip, year, emp:est, emp_, qp1_, ap_, empflag) %>% 
+  right_join(zbpfull) -> zbpfull
 
 # Imputed Employee and Payroll through NA
-zbpfull$emp2    <- ifelse(zbpfull$empflag == "", zbpfull$emp, NA)
-zbpfull$ap2     <- ifelse(zbpfull$empflag == "", zbpfull$ap, NA)
+zbpfull$emp2    <- ifelse(is.na(zbpfull$empflag), zbpfull$emp, NA)
+zbpfull$qp12    <- ifelse(is.na(zbpfull$empflag), zbpfull$qp1, NA)
+zbpfull$ap2     <- ifelse(is.na(zbpfull$empflag), zbpfull$ap, NA)
 zbpfull$empflag <- NULL # need to get rid of character variables (na.locf)
 
 library(zoo)

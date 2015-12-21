@@ -45,7 +45,7 @@ data %>%
 sc1 <- ggplot(access, aes(x = time, y = Access))
 sc1 + stat_smooth() + theme_minimal() +
   labs(x = "Year", y = "Proportion with Broadband Access")#,
-       #title = "Zip Codes with Broadband Access")
+#title = "Zip Codes with Broadband Access")
 ggsave(paste0(localDir, "/ZIP_no_bb_up.png"), width = 10, height = 7.5)
 
 
@@ -56,7 +56,7 @@ data %>%
 sc2 <- ggplot(noaccess, aes(x = time, y = Access))
 sc2 + stat_smooth() + theme_minimal() +
   labs(x = "Year", y = "Proportion without Broadband Access")#,
-       #title = "Zip Codes without Broadband Access")
+#title = "Zip Codes without Broadband Access")
 ggsave(paste0(localDir, "/ZIP_no_bb_down.png"), width = 10, height = 7.5)
 
 
@@ -68,17 +68,19 @@ ltime <- data.frame(loan = c("Pilot", "Farm Bill"),
                     disp = c("black", "red"))
 
 data %>%
-  group_by(year) %>%
+  group_by(time) %>%
   distinct(zip) %>%
   summarise(loans   = sum(loans),
             pilot   = sum(ploans),
             `Farm Bill` = sum(biploans1234)) -> ggloans
-ggplot(ggloans, aes(x = year, y = loans)) + geom_line() + theme_minimal() +
+ggplot(ggloans, aes(x = time, y = loans)) + geom_line() + theme_minimal() +
   scale_y_continuous(breaks = seq(0, 3000, 500)) +
-  geom_vline(xintercept = 2002, color = "black", linetype = "longdash") +
-  geom_vline(xintercept = 2004, color = "red", linetype = "longdash") +
-  labs(x = "", y = "Cumulative Zip Codes Awarded Loans")#,
-       #title = "USDA Loans by Zip Code \n Across Time")
+  geom_vline(xintercept = as.numeric(as.Date("2001-12-31")),
+             color = "black", linetype = "longdash") +
+  geom_vline(xintercept = as.numeric(as.Date("2003-12-31")),
+             color = "red", linetype = "longdash") +
+  labs(x = "", y = "Cumulative ZIP Codes Awarded Loans")#,
+#title = "USDA Loans by Zip Code \n Across Time")
 ggsave(paste0(localDir, "/Loan_award_time.png"), width = 10, height = 7.5)
 
 # # A Barplot of loans by year?
@@ -90,10 +92,11 @@ ggsave(paste0(localDir, "/Loan_award_time.png"), width = 10, height = 7.5)
 data %>%
   group_by(year) %>%
   distinct(zip) %>%
-  summarise(Category = "All Zips", n = n(),
+  summarise(Category = "All ZIPs", n = n(),
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
+            Pay = mean(APay_R2), PaySD = sd(APay_R2),
             TRI = mean(tri), TRISD = sd(tri),
             AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t1
 # Any Loans
@@ -105,6 +108,7 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
+            Pay = mean(APay_R2), PaySD = sd(APay_R2),
             TRI = mean(tri), TRISD = sd(tri),
             AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t2
 # "Farm Bill Loans"
@@ -116,6 +120,7 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
+            Pay = mean(APay_R2), PaySD = sd(APay_R2),
             TRI = mean(tri), TRISD = sd(tri),
             AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t3
 # Pilot Loans
@@ -127,6 +132,7 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
+            Pay = mean(APay_R2), PaySD = sd(APay_R2),
             TRI = mean(tri), TRISD = sd(tri),
             AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t4
 # No Loans
@@ -138,58 +144,99 @@ data %>%
             Prov = mean(Prov_num), ProvSD = sd(Prov_num),
             Est = mean(est), EstSD = sd(est),
             Emp = mean(emp_), EmpSD = sd(emp_),
+            Pay = mean(APay_R2), PaySD = sd(APay_R2),
             TRI = mean(tri), TRISD = sd(tri),
             AREA = mean(AREA_zcta), AREASD = sd(AREA_zcta)) -> t5
 ta  <- bind_rows(t1, t3, t4)
 ta  <- arrange(ta, year, Category)
-pta <- data.frame(year = as.character(ta$year))
-pta <- cbind(pta, sapply(ta[,2:13], function(x)
-  prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
-pta
 
-pta$Providers <- paste0(pta$Prov, " (", pta$ProvSD, ")")
-pta$Establishments <- paste0(pta$Est, " (", pta$EstSD, ")")
-pta$Employed <- paste0(pta$Emp, " (", pta$EmpSD, ")")
-pta$TRI <- paste0(pta$TRI, " (", pta$TRISD, ")")
-pta$AREA <- paste0(pta$AREA, " (", pta$AREASD, ")")
-pta <- select(pta, year:n, Providers, Establishments, Employed, TRI, AREA)
+ziptab <- function(ta){
+  pta <- data.frame(year = as.character(ta$year))
+  pta <- cbind(pta, sapply(ta[,2:15], function(x)
+    prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
+  
+  pta$Providers      <- paste0(pta$Prov, " (", pta$ProvSD, ")")
+  pta$Establishments <- paste0(pta$Est, " (", pta$EstSD, ")")
+  pta$Employed       <- paste0(pta$Emp, " (", pta$EmpSD, ")")
+  pta$Pay            <- paste0("$", pta$Pay, " ($", pta$PaySD, ")")
+  pta$TRI            <- paste0(pta$TRI, " (", pta$TRISD, ")")
+  pta$AREA           <- paste0(pta$AREA, " (", pta$AREASD, ")")
+  pta <- select(pta, year:n, Providers, Establishments, Employed, Pay, TRI, AREA)
+  
+  return(pta)
+}
 
-write.csv(pta, paste0(localDir, "/Zip_Stats.csv"), row.names = F)
+
+ziptab2 <- function(ta){
+  pta <- data.frame(year = as.character(ta$year))
+  pta <- cbind(pta, sapply(ta[, 4:15], function(x)
+    prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
+  
+  pta$Providers      <- paste0(pta$Prov, " (", pta$ProvSD, ")")
+  pta$Establishments <- paste0(pta$Est, " (", pta$EstSD, ")")
+  pta$Employed       <- paste0(pta$Emp, " (", pta$EmpSD, ")")
+  pta$Pay            <- paste0("$", pta$Pay, " ($", pta$PaySD, ")")
+  pta$TRI            <- paste0(pta$TRI, " (", pta$TRISD, ")")
+  pta$AREA           <- paste0(pta$AREA, " (", pta$AREASD, ")")
+  pta <- select(pta, year, Providers, Establishments, Employed, Pay, TRI, AREA)
+  
+  return(pta)
+}
+
+pta <- ziptab(ta)
+
+write.csv(pta, paste0(localDir, "/ZIP_Stats.csv"), row.names = F)
 stargazer(pta, summary = F, rownames = F,
-          out = paste0(localDir, "/Zip_Stats.tex"))
+          out = paste0(localDir, "/ZIP_Stats.tex"))
+
+# All ZIPS
+pta <- ziptab2(t1)
+write.csv(pta, paste0(localDir, "/ZIP_Stats_All.csv"), row.names = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/ZIP_Stats_All.tex"))
+# Farm Bill
+pta <- ziptab2(t3)
+write.csv(pta, paste0(localDir, "/ZIP_Stats_FB.csv"), row.names = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/ZIP_Stats_FB.tex"))
+# Pilot
+pta <- ziptab2(t4)
+write.csv(pta, paste0(localDir, "/ZIP_Stats_Pilot.csv"), row.names = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/ZIP_Stats_Pilot.tex"))
 
 
 # ---- Zip Attributes Graph -----------------------------------------------
 data %>%
-  select(zip, time, Prov_hist, est, emp_) %>%
-  gather(key, value, Prov_hist, est, emp_) -> all
+  select(zip, time, Prov_hist, est, emp_, APay_R2) %>%
+  gather(key, value, Prov_hist, est, emp_, APay_R2) -> all
 all$class <- "all"
 # ipilot, ibip12, ibip1234, iloans
 data %>%
   filter(iloans) %>%
-  select(zip, time, Prov_hist, est, emp_) %>%
-  gather(key, value, Prov_hist, est, emp_) -> all1
+  select(zip, time, Prov_hist, est, emp_, APay_R2) %>%
+  gather(key, value, Prov_hist, est, emp_, APay_R2) -> all1
 all1$class <- "Any Loan"
 data %>%
   filter(ipilot) %>%
-  select(zip, time, Prov_hist, est, emp_) %>%
-  gather(key, value, Prov_hist, est, emp_) -> all2
+  select(zip, time, Prov_hist, est, emp_, APay_R2) %>%
+  gather(key, value, Prov_hist, est, emp_, APay_R2) -> all2
 all2$class <- "Pilot"
 data %>%
   filter(ibip1234) %>%
-  select(zip, time, Prov_hist, est, emp_) %>%
-  gather(key, value, Prov_hist, est, emp_) -> all3
+  select(zip, time, Prov_hist, est, emp_, APay_R2) %>%
+  gather(key, value, Prov_hist, est, emp_, APay_R2) -> all3
 all3$class <- "Farm Bill"
 data %>%
   filter(!ipilot | !ibip1234) %>%
-  select(zip, time, Prov_hist, est, emp_) %>%
-  gather(key, value, Prov_hist, est, emp_) -> all4
+  select(zip, time, Prov_hist, est, emp_, APay_R2) %>%
+  gather(key, value, Prov_hist, est, emp_, APay_R2) -> all4
 all4$class <- "No Loan"
 test <- bind_rows(all2, all3, all4)
 
 test$class <- factor(test$class, levels = c("No Loan", "Pilot", "Farm Bill"),
                      labels = c("None", "Pilot", "Farm Bill"))
-levels(test$key) <- c("Providers", "Establishments", "Employed")
+levels(test$key) <- c("Providers", "Establishments", "Employed", "Annual Pay")
 test$key <- factor(test$key, levels=rev(levels(test$key)))
 
 # ggplot(filter(test, key == "Providers"),
@@ -235,14 +282,14 @@ rm(access, all, all1, all2, all3, all4, test)
 
 # Try this with a ggplot2 description...
 fipdata <- data %>%
-  group_by(fips, year) %>%
+  group_by(fips, year, time) %>%
   summarise(n = n(), PopIRS = mean(Pop_IRS), PopPOV = mean(POP_POV),
-         HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
-         HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS), Area = mean(AREA_cty),
-         Pilot = sum(ploans), `Farm Bill` = sum(biploans1234), 
-         Prov = weighted.mean(Prov_hist, SUMBLKPOP + 1),
-         ipilot = !all(!ipilot), ibip1234 = !all(!ibip1234),
-         iloans = !all(!iloans))
+            HHInc = mean(MEDHHINC_R), HHIncIRS = mean(AGI_IRS_R*1000 / HH_IRS),
+            HHWageIRS = mean(Wages_IRS_R*1000 / HH_IRS), Area = mean(AREA_cty),
+            Pilot = sum(ploans), `Farm Bill` = sum(biploans1234), 
+            Prov = weighted.mean(Prov_hist, SUMBLKPOP + 1),
+            ipilot = !all(!ipilot), ibip1234 = !all(!ibip1234),
+            iloans = !all(!iloans))
 
 # # KKLR Check:
 # library(knitr)
@@ -260,7 +307,8 @@ fipdata %>%
   summarise(Category = "All", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
-            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS)) -> t1
+            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
+            HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t1
 # "Farm Bill Loans"
 fipdata %>%
   group_by(year) %>%
@@ -269,7 +317,8 @@ fipdata %>%
   summarise(Category = "Farm Bill", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
-            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS)) -> t3
+            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
+            HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t3
 # Pilot Loans
 fipdata %>%
   group_by(year) %>%
@@ -278,48 +327,88 @@ fipdata %>%
   summarise(Category = "Pilot", n = n(),
             Provm = mean(Prov), ProvSD = sd(Prov),
             PopIRSm = mean(PopIRS), PopIRSSD = sd(PopIRS),
-            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS)) -> t4
+            HHIncIRSm = mean(HHIncIRS), HHIncIRSSD = sd(HHIncIRS),
+            HHWageIRSm = mean(HHWageIRS), HHWageIRSSD = sd(HHWageIRS)) -> t4
 ta <- bind_rows(t1, t3, t4)
 ta <- arrange(ta, year, Category)
-pta <- data.frame(year = as.character(ta$year))
-pta <- cbind(pta, sapply(ta[,2:9], function(x)
-  prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
-pta
-pta$Providers <- paste0(pta$Provm, " (", pta$ProvSD, ")")
-pta$Population <- paste0(pta$PopIRSm, " (", pta$PopIRSSD, ")")
-pta$Income <- paste0(pta$HHIncIRSm, " (", pta$HHIncIRSSD, ")")
-pta <- select(pta, year:n, Providers, Population, Income)
+
+fiptable <- function(ta){
+  pta <- data.frame(year = as.character(ta$year))
+  pta <- cbind(pta, sapply(ta[,2:11], function(x)
+    prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
+  pta
+  pta$Providers  <- paste0(pta$Provm, " (", pta$ProvSD, ")")
+  pta$Population <- paste0(pta$PopIRSm, " (", pta$PopIRSSD, ")")
+  pta$Income     <- paste0("$", pta$HHIncIRSm, " ($", pta$HHIncIRSSD, ")")
+  pta$Wages      <- paste0("$", pta$HHWageIRSm, " ($", pta$HHWageIRSSD, ")")
+  pta <- select(pta, year:n, Providers, Population, Income, Wages)
+  
+  return(pta)
+}
+
+fiptable2 <- function(ta){
+  pta <- data.frame(year = as.character(ta$year))
+  pta <- cbind(pta, sapply(ta[, 4:11], function(x)
+    prettyNum(x, big.mark = ",", digits = 3, drop0trailing = T)))
+  pta
+  pta$Providers  <- paste0(pta$Provm, " (", pta$ProvSD, ")")
+  pta$Population <- paste0(pta$PopIRSm, " (", pta$PopIRSSD, ")")
+  pta$Income     <- paste0("$", pta$HHIncIRSm, " ($", pta$HHIncIRSSD, ")")
+  pta$Wages      <- paste0("$", pta$HHWageIRSm, " ($", pta$HHWageIRSSD, ")")
+  pta <- select(pta, year, Providers, Population, Income, Wages)
+  
+  return(pta)
+}
+
+pta <- fiptable(ta)
 write.csv(pta, paste0(localDir, "/Fips_Stats.csv"), row.names = F)
 stargazer(pta, summary = F, rownames = F,
           out = paste0(localDir, "/Fips_Stats.tex"))
 
+# All
+pta <- fiptable2(t1)
+write.csv(pta, paste0(localDir, "/Fips_Stats_All.csv"), row.names = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/Fips_Stats_All.tex"))
+# Farm Bill
+pta <- fiptable2(t3)
+write.csv(pta, paste0(localDir, "/Fips_Stats_FB.csv"), row.names = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/Fips_Stats_FB.tex"))
+# Pilot
+pta <- fiptable2(t4)
+write.csv(pta, paste0(localDir, "/Fips_Stats_Pilot.csv"), row.names = F)
+stargazer(pta, summary = F, rownames = F,
+          out = paste0(localDir, "/Fips_Stats_Pilot.tex"))
 
 # ---- FIP Attributes Graph -----------------------------------------------
 fipdata %>%
   filter(ipilot) %>%
-  select(fips, year, PopIRS, HHIncIRS, Prov) %>%
-  gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall2
+  select(fips, time, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
+  gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall2
 fipall2$class <- "Pilot"
 fipdata %>%
   filter(ibip1234) %>%
-  select(fips, year, PopIRS, HHIncIRS, Prov) %>%
-  gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall3
+  select(fips, time, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
+  gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall3
 fipall3$class <- "Farm Bill"
 fipdata %>%
   filter(!ipilot | !ibip1234) %>%
-  select(fips, year, PopIRS, HHIncIRS, Prov) %>%
-  gather(key, value, PopIRS, HHIncIRS, Prov) -> fipall4
+  select(fips, time, PopIRS, HHIncIRS, HHWageIRS, Prov) %>%
+  gather(key, value, PopIRS, HHIncIRS, HHWageIRS, Prov) -> fipall4
 fipall4$class <- "No Loan"
 fipall <- bind_rows(fipall2, fipall3, fipall4)
 
 fipall$class <- factor(fipall$class, levels=c("No Loan", "Pilot", "Farm Bill"),
                        labels = c("None", "Pilot", "Farm Bill"))
-levels(fipall$key) <- c("Population", "Mean Income", "Providers")
+levels(fipall$key) <- c("Population", "Mean Income", "Mean Wages", "Providers")
 
-ggplot(fipall, aes(x = year, y = value, colour = class, group = class)) +
+ggplot(fipall, aes(x = time, y = value, colour = class, group = class)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "smooth", size = 2) +
-  geom_vline(xintercept = 2002, color = "black", linetype = "longdash") +
-  geom_vline(xintercept = 2004, color = "red", linetype = "longdash") +
+  geom_vline(xintercept = as.numeric(as.Date("2001-12-31")),
+             color = "black", linetype = "longdash") +
+  geom_vline(xintercept = as.numeric(as.Date("2003-12-31")),
+             color = "red", linetype = "longdash") +
   facet_grid(key~., scales = "free_y") + labs(x = "", y = "") +
   scale_y_continuous(labels = comma) +
   guides(color = guide_legend(title = "Loan Type")) +
@@ -336,7 +425,8 @@ levels(data$ruc) <- list("Urban" = 1:3, "Rural-Adjacent" = c(4,6,8),
 data$loantype <- ifelse(data$iloans, "YES", "NONE")
 data$loantype <- ifelse(data$ipilot, "PILOT", data$loantype)
 data$loantype <- ifelse(data$ibip1234, "FARM BILL", data$loantype)
-data$loantype <- factor(data$loantype)
+data$loantype <- factor(data$loantype,
+                        levels = c("NONE", "PILOT", "FARM BILL"))
 
 
 data %>% 
@@ -354,6 +444,7 @@ RUC %>%
             per = sprintf("(%.1f%%)", 100*sum(zero, na.rm = T) / n())) %>% 
   unite(temp, tots, per, sep = " ") %>% 
   spread(loantype, temp) -> temp
+temp$time <- as.character(temp$time)
 knitr::kable(temp, caption = "ZIP Codes Without Access")
 write.csv(temp, paste0(localDir, "/ZIP_loan_time.csv"), row.names = F)
 stargazer(temp, summary = F, rownames = F,

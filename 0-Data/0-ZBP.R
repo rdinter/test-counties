@@ -25,11 +25,11 @@ urls <- paste0("https://www.census.gov/econ/cbp/download/full_layout/",
                  "ZIP_Detail_Layout_SIC.txt"))
 lapply(urls, function(x) bdown(url = x, folder = data_source))
 
-##### ZBP Data from 1994 to 2001
+# ---- ZBP Data from 1994 to 2001
 years  <- c(as.character(94:99), "00", "01")
 url    <- "ftp://ftp.census.gov/Econ2001_And_Earlier/CBP_CSV/"
 
-#Download Totals
+# Download Totals
 urls       <- paste0(url, "zbp", years, "totals.zip")
 lapply(urls, function(x) bdown(url = x, folder = data_source))
 files      <- paste(data_source, basename(urls), sep = "/")
@@ -38,11 +38,15 @@ zbptot9401 <- mapply(function(x, y) zipdata(x, tempDir, y), x = files,
                      y = year, SIMPLIFY = F, USE.NAMES = T)
 
 zbptot9401 <- bind_rows(zbptot9401)
+# Values are in $1,000s
+zbptot9401$qp1 <- 1000*zbptot9401$qp1
+zbptot9401$ap  <- 1000*zbptot9401$ap
+
 write_csv(zbptot9401, path = paste0(localDir, "/ZBPtotal94-01.csv"))
 save(zbptot9401, file = paste0(localDir, "/ZBPtotal94-01.Rda"))
 rm(zbptot9401)
 
-#Download Industries
+# Download Industries
 urls       <- paste0(url, "zbp", years, "detail.zip")
 lapply(urls, function(x) bdown(url = x, folder = data_source))
 files      <- paste(data_source, basename(urls), sep = "/")
@@ -55,11 +59,11 @@ write_csv(zbpind9401, path = paste0(localDir, "/ZBPdetail94-01.csv"))
 save(zbpind9401, file = paste0(localDir, "/ZBPdetail94-01.Rda"))
 rm(zbpind9401)
 
-##### ZBP Data from 2002 to 2013
+# ---- ZBP Data from 2002 to 2013
 years  <- as.character(2002:2013)
 url    <- "ftp://ftp.census.gov/econ"
 
-#Download Totals
+# Download Totals
 urls       <- paste0(url, years, "/CBP_CSV/zbp", substr(years, 3, 4),
                      "totals.zip")
 lapply(urls, function(x) bdown(url = x, folder = data_source))
@@ -69,11 +73,15 @@ zbptot0213 <- mapply(function(x, y) zipdata(x, tempDir, y), x = files,
                      y = year, SIMPLIFY = F, USE.NAMES = T)
 
 zbptot0213 <- bind_rows(zbptot0213)
+# Values are in $1,000s
+zbptot0213$qp1 <- 1000*zbptot0213$qp1
+zbptot0213$ap  <- 1000*zbptot0213$ap
+
 write_csv(zbptot0213, path = paste0(localDir, "/ZBPtotal02-13.csv"))
 save(zbptot0213, file = paste0(localDir, "/ZBPtotal02-13.Rda"))
 rm(zbptot0213)
 
-#Download Industries
+# Download Industries
 urls       <- paste0(url, years, "/CBP_CSV/zbp", substr(years, 3, 4),
                      "detail.zip")
 lapply(urls, function(x) bdown(url = x, folder = data_source))

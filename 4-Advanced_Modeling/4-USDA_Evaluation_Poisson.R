@@ -1,6 +1,4 @@
 # Robert Dinterman
-# http://glmm.wikidot.com/faq
-# GLMMs via MASS::glmmPQL
 
 print(paste0("Started 4-USDA_Evaluation_Poisson at ", Sys.time()))
 
@@ -17,6 +15,8 @@ library(spacetime)
 localDir <- "4-Advanced_Modeling/USDA_Evaluation"
 if (!file.exists(localDir)) dir.create(localDir)
 
+sink(paste0(localDir, "/4-USDA_Evaluation_Poisson.txt"))
+
 load("1-Organization/USDA_Evaluation/Final.Rda")
 data$iloans <- 1*(data$loans > 0)
 data$ipilot <- 1*(data$ploans > 0)
@@ -24,7 +24,7 @@ data$icur   <- 1*(data$biploans1234 > 0)
 # data %>%
 #   group_by(zip, year, STATE, ruc03, ruc, SUMBLKPOP) %>%
 #   dplyr::select(Prov_num, emp:emp_, Pop_IRS, HHINC_IRS_R, HHWAGE_IRS_R,
-#                 logINC, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
+#                 logAPay_R2, ap_R, qp1_R, POV_ALL_P, roughness, slope, tri, AREA,
 #                 Prov_alt, loans, ploans, biploans1234, iloans, ipilot, icur,
 #                 long, lat) %>%
 #   summarise_each(funs(mean)) -> pdata
@@ -33,37 +33,114 @@ data$icur   <- 1*(data$biploans1234 > 0)
 
 # ---- Biannual -----------------------------------------------------------
 
-pois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+pois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logAPay_R2 + tri + ruc +
               poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta),
             family = poisson, data = data)
 summary(pois)
 
-poist <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
+poist <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logAPay_R2 + tri + ruc +
                poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
                factor(time), family = poisson, data = data)
 summary(poist)
 
 # F Test
 anova(pois, poist, test = "Chisq")
-rm(pois)
+# rm(pois)
 
 # ---- Quasi --------------------------------------------------------------
 
-qpois  <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
-                poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
-                factor(time), family = quasipoisson, data = data)
+qpois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logAPay_R2 + tri + ruc +
+               poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(time), family = quasipoisson, data = data)
 summary(qpois)
 
+# ---- Negative Binomial --------------------------------------------------
 library(MASS)
-negb1 <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +
-               ruc + poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) +
-               I(est / AREA_zcta) + 
-               factor(time), family = negative.binomial(theta = 1), data = data)
-summary(negb1)
-negb  <- glm.nb(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri +
-                  ruc + poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) +
-                  I(est / AREA_zcta) + factor(time), data = data)
+negb <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logAPay_R2 + tri + ruc +
+              poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+              factor(time), family = negative.binomial(theta = 1), data = data)
 summary(negb)
+# negb2 <- glm.nb(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logAPay_R2 + tri + ruc +
+#               poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+#               factor(time), data = data)
+# summary(negb2)
+
+# ----
+library(stargazer)
+stargazer(poist, qpois, negb,
+          title = "Poisson Regressions",
+          out = paste0(localDir, "/Poisson.tex"))
+# ----
+png(paste0(localDir, "/QQpois.png"))
+qqnorm(residuals(poist, type="deviance"),
+       main = "Poisson with Time Fixed Effects Q-Q Plot")
+qqline(residuals(poist, type="deviance"), col = 2, lwd = 2, lty = 2)
+dev.off()
+
+# ---- RUC and Loan -------------------------------------------------------
+
+library(car)
+pois1 <- glm(Prov_num ~ iloans + ruc:iloans + log(est) + log(Pop_IRS) +
+               logAPay_R2 + tri + ruc + poly(AREA_zcta,2) +
+               I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(time), family = poisson, data = data)
+summary(pois1)
+
+sum(coef(pois1)[c("iloans", "rucadj", "iloans:rucadj")])
+linearHypothesis(pois1, "1*iloans + 1*rucadj + 1*iloans:rucadj = 0")
+
+sum(coef(pois1)[c("iloans", "rucnonadj", "iloans:rucnonadj")])
+linearHypothesis(pois1, "1*iloans + 1*rucnonadj + 1*iloans:rucnonadj = 0")
+
+pois2 <- glm(Prov_num ~ ipilot + icur + log(est) + log(Pop_IRS) +
+               logAPay_R2 + tri + ruc + poly(AREA_zcta,2) +
+               I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(time), family = poisson, data = data)
+summary(pois2)
+
+pois3 <- glm(Prov_num ~ ipilot + icur + ruc:ipilot + ruc:icur +
+               log(est) + log(Pop_IRS) +
+               logAPay_R2 + tri + ruc + poly(AREA_zcta,2) +
+               I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) +
+               factor(time), family = poisson, data = data)
+summary(pois3)
+
+sum(coef(pois3)[c("ipilot", "rucadj", "ipilot:rucadj")])
+linearHypothesis(pois3, "1*ipilot + 1*rucadj + 1*ipilot:rucadj = 0")
+
+sum(coef(pois3)[c("ipilot", "rucnonadj", "ipilot:rucnonadj")])
+linearHypothesis(pois3, "1*ipilot + 1*rucnonadj + 1*ipilot:rucnonadj = 0")
+
+sum(coef(pois3)[c("icur", "rucadj", "icur:rucadj")])
+linearHypothesis(pois3, "1*icur + 1*rucadj + 1*icur:rucadj = 0")
+
+sum(coef(pois3)[c("icur", "rucnonadj", "icur:rucnonadj")])
+linearHypothesis(pois3, "1*icur + 1*rucnonadj + 1*icur:rucnonadj = 0")
+
+stargazer(poist, pois1, pois2, pois3,
+          title = "Poisson Auxiliary Regressions",
+          out = paste0(localDir, "/Poisson_Aux.tex"))
+
+sink()
+
+# ---- Marginal Effects ...
+mean(poist$coefficients["iloans"]*poist$fitted.values) # First model
+
+mean(sum(coef(pois1)[c("iloans", "rucadj", "iloans:rucadj")])*
+       pois1$fitted.values) # Second Model Rural Adjacent
+
+mean(sum(coef(pois1)[c("iloans", "rucnonadj", "iloans:rucnonadj")])*
+       pois1$fitted.values) # Second Model Rural Non-Adjacent
+
+mean(coef(pois2)["ipilot"]*pois2$fitted.values) # Pilot model
+
+mean(coef(pois3)["ipilot"]*pois3$fitted.values) # Pilot Metro
+
+mean(sum(coef(pois3)[c("icur", "rucadj", "icur:rucadj")])*
+       pois3$fitted.values) # Farm Bill Rural Adjacent
+
+mean(sum(coef(pois3)[c("icur", "rucnonadj", "icur:rucnonadj")])*
+       pois3$fitted.values) # Farm Bill Rural Non-Adjacent
 
 
 # ---- Residuals ----------------------------------------------------------
@@ -111,9 +188,48 @@ resid.plot + geom_polygon(aes(fill = poistr)) + facet_wrap(~year) +
         legend.position = c(0.7, 0), legend.justification = c(0, 0),
         legend.direction = "horizontal", legend.box.just = "bottom",
         legend.background = element_rect(fill = "transparent"))
-ggsave(paste0(localDir, "/poist_resid.pdf"), width = 10, height = 7.5)
+# ggsave(paste0(localDir, "/poist_resid.pdf"), width = 10, height = 7.5)
 ggsave(paste0(localDir, "/poist_resid.png"), width = 10, height = 7.5)
 rm(d, ggstate, ggzcta, pzcta, resid.plot)
+
+
+# ---- Moran --------------------------------------------------------------
+
+# Need to add in a Moran's I test across each time period for residuals
+# Steps: 1 - subset the data; 2 - create list to store values; 3 - loop
+library(spdep)
+zcta <- subset(zcta,zcta$ObjectID %in% data$ObjectID)
+zcta <- zcta[order(zcta$ZIP),]
+weights <- poly2nb(zcta)
+W <- nb2listw(weights, zero.policy = T)
+
+set.seed(324)
+
+times     <- unique(data$time)
+nsim      <- 100
+testmoran <- data.frame(time=NA, Stat=NA, Pval=NA)
+mcmoran   <- data.frame(time=NA, Stat=NA, Pval=NA)
+
+for (i in times){
+  temp1 <- subset(data, time == i)
+  j5    <- moran.test(temp1$poistr, W, zero.policy = T)
+  testmoran[which(times == i), 1] <- as.character(times[which(times == i)])
+  testmoran[which(times == i), 2] <- j5$estimate["Moran I statistic"]
+  testmoran[which(times == i), 3] <- j5$p.value
+  
+  j5 <- moran.mc(temp1$poistr, W, nsim, zero.policy = T)
+  mcmoran[which(times == i), 1] <- as.character(times[which(times == i)])
+  mcmoran[which(times == i), 2] <- j5$statistic
+  mcmoran[which(times == i), 3] <- j5$p.value
+  
+}
+
+testmoran
+mcmoran
+
+stargazer(as.matrix(testmoran), title = "Moran's I Test",
+          out = paste0(localDir, "/MoranI.tex"))
+
 # ---- Variogram ----------------------------------------------------------
 
 # STdata <- filter(pdata, STATE == "TX")
@@ -132,17 +248,26 @@ STpool <- SpatialPointsDataFrame(cbind(STdata$long, STdata$lat),
 raster::projection(STpool) <- CRS("+init=epsg:4326")
 STpool   <- spTransform(STpool,CRS("+init=epsg:3395"))
 
-#system.time(
+system.time(
   j6 <- variogram(poistr ~ 1, STpool, cutoff = 50000)
-#)
+)
 # user   system  elapsed 
-# 1953.772    0.274 1951.978 
+# 2089.969    0.640 2088.834 
 
 plot(j6, main = "Pooled Variogram")
 # ----
 png(paste0(localDir, "/Pooled_Variogram.png"))
-plot(j6, main = "Pooled Variogram")
+plot(j6)
 dev.off()
+# ----
+
+system.time(
+  fit.j6 <- fit.variogram(j6, vgm(0.3, "Exp", 1000, 0.3))
+)
+# System is not fitting, which is likely to indicate that there is no
+#  spatial relationship at this level. Spatial autocorrelation is not
+#  a concern.
+
 # ----
 j6 <- list()
 temp <- unique(STpool$time)
@@ -156,14 +281,7 @@ for (i in (1:length(temp))){
 }
 
 # system.time(
-#   fit.j6 <- fit.variogram(j6, vgm(0.3, "Exp", 1000, 0.3))
-# )
-# System is not fitting, which is likely to indicate that there is no
-#  spatial relationship at this level. Spatial autocorrelation is not
-#  a concern.
-
-# system.time(
-#   fit.j6.reml <- fit.variogram.reml(qpois1r ~ 1, STpool,
+#   fit.j6.reml <- fit.variogram.gls(poistr ~ 1, STpool,
 #                                     model = vgm(0.4, "Exp", 1000, 0.1))
 # )
 
@@ -173,10 +291,10 @@ for (i in (1:length(temp))){
 
 # ---- VariogramST --------------------------------------------------------
 
-#system.time(
+system.time(
   j5 <- variogramST(poistr ~ 1, STst, assumeRegular = T,
                     cutoff = 50000)
-#)
+)
 # |===============================================================| 100%
 # user   system  elapsed 
 # 1907.235    0.341 1905.142 
@@ -195,125 +313,3 @@ png(paste0(localDir, "/ST_Variogram_wireframe.png"))
 plot(j5, wireframe = T)
 dev.off()
 
-# ---- Spatial ------------------------------------------------------------
-# 
-library(MASS)
-library(spBayes)
-
-# beta.starting <- coefficients(pois1)
-# beta.tuning   <- t(chol(vcov(pois1)))
-
-# Here posterior inference is based on three MCMC chains each of length 15,000.
-#  The code to generate the first of these chains is given below.
-n.batch      <- 300
-batch.length <- 50
-n.samples    <- n.batch * batch.length
-# ydata <- subset(data, time == "2006-12-31")
-ydata <- subset(data, STATE == "MN")
-
-pois <- glm(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
-              poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) + factor(time),
-            family = "poisson", data = ydata)
-beta.starting <- coefficients(pois)
-beta.tuning   <- t(chol(vcov(pois)))
-
-pois.sp.chain.1 <-
-  spGLM(Prov_num ~ iloans + log(est) + log(Pop_IRS) + logINC + tri + ruc +
-          poly(AREA_zcta,2) + I(Pop_IRS / AREA_cty) + I(est / AREA_zcta) + factor(time),
-        family = "poisson", data = ydata,
-        coords = as.matrix(ydata[, c("long", "lat")]),
-        starting = list(beta = beta.starting,
-                        phi = 3/0.5,
-                        sigma.sq = 1,w = 0),
-        tuning = list(beta = beta.tuning, phi = 0.5,
-                      sigma.sq = 0.1,w = 0.1),
-        priors = list("beta.Flat",
-                      phi.Unif = c(3/1, 3/0.1),
-                      sigma.sq.IG = c(2, 1)),
-        amcmc = list(n.batch = n.batch,
-                     batch.length = batch.length,
-                     accept.rate = 0.43),
-        cov.model = "exponential")
-
-samps <- mcmc.list(pois.sp.chain.1$p.beta.theta.samples)
-plot(samps)
-# 
-# ##### Spatial GLM #####
-# library(MASS)
-# ## Generate some count data from each location
-# n <- 50
-# coords <- cbind(runif(n, 0, 1), runif(n, 0, 1))
-# phi <- 3/0.5
-# sigma.sq <- 2
-# R <- exp(-phi * iDist(coords))
-# w <- mvrnorm(1, rep(0, n), sigma.sq * R)
-# beta.0 <- 0.1
-# y <- rpois(n, exp(beta.0 + w))
-# 
-# ##First fit a simple non-spatial GLM:
-# pois.nonsp <- glm(y ~ 1, family = "poisson")
-# beta.starting <- coefficients(pois.nonsp)
-# beta.tuning <- t(chol(vcov(pois.nonsp)))
-# 
-# ## Here posterior inference is based on three MCMC chains each of length 15,000. The code to generate the first of these chains is given below.
-# n.batch <- 300
-# batch.length <- 50
-# n.samples <- n.batch * batch.length
-# pois.sp.chain.1 <-
-#   spGLM(y ~ 1,family = "poisson",coords = coords,
-#         starting = list(beta = beta.starting,
-#                         phi = 3/0.5,
-#                         sigma.sq = 1,w = 0),
-#         tuning = list(beta = 0.1, phi = 0.5,
-#                       sigma.sq = 0.1,w = 0.1),
-#         priors = list("beta.Flat",
-#                       phi.Unif = c(3/1, 3/0.1),
-#                       sigma.sq.IG = c(2, 1)),
-#         amcmc = list(n.batch = n.batch,
-#                      batch.length=batch.length,
-#                      accept.rate = 0.43),
-#         cov.model = "exponential")
-# 
-# samps <- mcmc.list(pois.sp.chain.1$p.beta.theta.samples)
-# plot(samps)
-# 
-# ##print(gelman.diag(samps))
-# ##gelman.plot(samps)
-# burn.in <- 10000
-# print(round(summary(window(samps, start = burn.in))$quantiles[,c(3, 1, 5)], 2))
-# 
-# samps <- as.matrix(window(samps, start = burn.in))
-# w <- cbind(pois.sp.chain.1$p.w.samples[, burn.in:n.samples])
-# beta.0.hat <- mean(samps[, "(Intercept)"])
-# w.hat <- apply(w, 1, mean)
-# y.hat <- exp(beta.0.hat + w.hat)
-# 
-# ## Map the predicted counts and associated standard errors
-# par(mfrow = c(1, 2))
-# surf <- mba.surf(cbind(coords, y), no.X = 100, no.Y = 100, extend = TRUE)$xyz.est
-# image.plot(surf, main = "Observed counts")
-# points(coords)
-# surf <- mba.surf(cbind(coords, y.hat), no.X = 100, no.Y = 100, extend = TRUE)$xyz.est
-# image.plot(surf, main = "Fitted counts")
-# points(coords)
-# http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0082142
-
-# This was done by using the functions “corSpatial” and “glmmPQL” available in
-#  the packages “nlme” and “MASS” in R, respectively. The so-called penalized
-#  quasi-likelihood (PQL) allow for fitting the variance-covariance-matrix to
-#  the data, thus resulting in a spatial GLMM. 
-# 
-# library(MASS)
-# library(nlme)
-# pdata$rprov <- round(pdata$Prov_num)
-# 
-# system.time(
-#   sppois <- glmmPQL(rprov ~ iloans + est + Pop_IRS + logINC +
-#                       tri + ruc,# + factor(year),
-#                     random = ~ 1 | factor(year),
-#                     family = quasipoisson, data = pdata,
-#                     correlation = corSpatial(form = ~ long + lat | factor(year),
-#                                              type = "exponential",
-#                                              metric = "euclidean",
-#                                              nugget = T))
-# )

@@ -1,3 +1,27 @@
+# Robert Dinterman
+# http://glmm.wikidot.com/faq
+# GLMMs via MASS::glmmPQL
+
+print(paste0("Started 4-USDA_Evaluation_OpenBUGS at ", Sys.time()))
+
+# ---- Start --------------------------------------------------------------
+
+library(dplyr)
+library(gstat)
+library(sp)
+library(spacetime)
+
+# suppressMessages(library(tidyr))
+
+# Create a directory for the data
+localDir <- "4-Advanced_Modeling/USDA_Evaluation"
+if (!file.exists(localDir)) dir.create(localDir)
+
+load("1-Organization/USDA_Evaluation/Final.Rda")
+data$iloans <- 1*(data$loans > 0)
+data$ipilot <- 1*(data$ploans > 0)
+data$icur   <- 1*(data$biploans1234 > 0)
+
 # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2870863/
 # 
 # The following WinBUGS code presents the general syntax for fitting the
