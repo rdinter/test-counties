@@ -1,0 +1,47 @@
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Wed, Nov 18, 2015 - 02:20:35 AM
+\begin{table}[!htbp] \centering 
+  \caption{Dynamic Panel} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{Prov\_num} \\ 
+\\[-1.8ex] & \textit{panel} & \multicolumn{2}{c}{\textit{panel}} \\ 
+ & \textit{linear} & \multicolumn{2}{c}{\textit{GMM}} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ lag(Prov\_num, 1) & 0.470$^{***}$ & 0.611$^{***}$ & 0.949$^{***}$ \\ 
+  & (0.001) & (0.003) & (0.002) \\ 
+  & & & \\ 
+ iloans & 1.531$^{***}$ & 0.197$^{***}$ & 0.563$^{***}$ \\ 
+  & (0.024) & (0.043) & (0.050) \\ 
+  & & & \\ 
+ log(est) & 1.092$^{***}$ & 0.139$^{***}$ & 0.288$^{***}$ \\ 
+  & (0.015) & (0.023) & (0.023) \\ 
+  & & & \\ 
+ log(Pop\_IRS) & 9.479$^{***}$ & 2.027$^{***}$ & 1.516$^{***}$ \\ 
+  & (0.047) & (0.122) & (0.079) \\ 
+  & & & \\ 
+ logAPay\_R2 & 0.275$^{***}$ & $-$0.102$^{***}$ & $-$0.105$^{***}$ \\ 
+  & (0.017) & (0.015) & (0.018) \\ 
+  & & & \\ 
+ I(Pop\_IRS/AREA\_cty) & 0.001$^{***}$ & 0.0002$^{***}$ & 0.001$^{***}$ \\ 
+  & (0.00003) & (0.00003) & (0.0001) \\ 
+  & & & \\ 
+ I(est/AREA\_zcta) & 0.0001 & $-$0.00004$^{***}$ & 0.0001 \\ 
+  & (0.0001) & (0.00001) & (0.0001) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 532,583 & 29,588 & 29,588 \\ 
+R$^{2}$ & 0.415 &  &  \\ 
+Adjusted R$^{2}$ & 0.392 &  &  \\ 
+F Statistic & 50,902.630$^{***}$ (df = 7; 502988) &  &  \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
