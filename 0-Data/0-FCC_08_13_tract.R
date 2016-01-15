@@ -15,7 +15,8 @@ data_source <- paste0(localDir, "/Raw/Tract")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
 
-##### FCC County Data http://www.fcc.gov/Bureaus/Common_Carrier/Reports/FCC-State_Link/IAD/
+# FCC County Data
+# http://www.fcc.gov/Bureaus/Common_Carrier/Reports/FCC-State_Link/IAD/
 url   <- "http://www.fcc.gov/Bureaus/Common_Carrier/Reports/FCC-State_Link/IAD/"
 files <- c("csv_dec_2008_tract.zip", "csv_tractdata_june_2009.zip",
            "csv_tractdata_dec_2009.zip", "csv_tractdata_june_2010.zip",
