@@ -212,9 +212,9 @@ errors <- names(RegionalData)[grepl("ERROR", names(RegionalData))]
 errors <- gsub("ERROR", "", errors)
 
 # Need to convert to numeric for some values ... quick diagnostic checks
-# RegionalData %>%
-#   bind_rows() %>%
-#   spread(Code, DataValue) -> data
+RegionalData %>%
+  bind_rows() %>%
+  spread(Code, DataValue) -> j5
 
 # Currently, RegionalData is a list. So you cannot write a csv of a list
 
@@ -289,8 +289,8 @@ RegionalIncome <- GetDataIncome("RegionalIncome", "CA1", "1",
                          "COUNTY", "ALL")
 # Need to convert to numeric for some values ... quick diagnostic checks
 
-write_csv(RegionalData, paste0(localDir, "/RegionalData.csv"))
-save(RegionalData, file = paste0(localDir, "/RegionalData.Rda"))
+write_csv(RegionalIncome, paste0(localDir, "/RegionalIncome.csv"))
+save(RegionalIncome, file = paste0(localDir, "/RegionalIncome.Rda"))
 
 rm(list = ls())
 

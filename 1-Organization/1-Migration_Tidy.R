@@ -289,6 +289,7 @@ aggdata <- aggdata %>%
   mutate(NET_Return = IN_Return - OUT_Return,
          NET_Exmpt = IN_Exmpt - OUT_Exmpt,
          NET_AGI = IN_AGI - OUT_AGI)
+aggdata <- as.data.frame(aggdata)
 
 save(aggdata, file = paste0(localDir, "/netmigration.Rda"))
 write_csv(aggdata, paste0(localDir, "/netmigration.csv"))
@@ -374,12 +375,6 @@ ctycty <- ctycty %>%
 
 write_csv(ctycty, paste0(localDir, "/ctycty.csv"))
 save(ctycty, file = paste0(localDir, "/ctycty.Rda"))
-
-rm(allin, allout, coords, data, incty, outcty)
-# ---- Controls -----------------------------------------------------------
-load("0-Data/IRS/CTYPop.Rda") # Population, Households, Income for county
-
-# Add in controls...
 
 rm(list = ls())
 
