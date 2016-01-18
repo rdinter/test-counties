@@ -144,6 +144,20 @@ dlocate <- dlocate %>%
 write_csv(dlocate, paste0(localDir, "/Location.csv"))
 zip(paste0(localDir, "/Location.zip"), paste0(localDir, "/Location.csv"))
 
+
+# ---- Basic Summary ------------------------------------------------------
+
+devents %>% mutate(fips = STATE_FIPS*1000 + CZ_FIPS) %>% 
+  filter(CZ_TYPE == "C") %>% 
+  group_by(YEAR, fips) %>% select(INJURIES_DIRECT:DAMAGE_CROPS) %>% 
+  summarise_each(funs(sum(., na.rm = T))) -> noaabasic
+
+noaabasic <- expand.grid(YEAR = unique(noaabasic$YEAR),
+                         fips = unique(noaabasic$fips)) %>% 
+  left_join(noaabasic) %>% replace(is.na(.), 0)
+
+save(noaabasic, file = paste0(localDir, "/noaabasic.Rda"))
+
 rm(list = ls())
 
 print(paste0("Finished 0-NOAA-Storm at ", Sys.time()))
