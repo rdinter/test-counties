@@ -110,8 +110,8 @@ temp$State_Code_Origin  <- 97
 temp$County_Code_Origin <- 0
 allin                   <- bind_rows(allin, temp)
 
-allin$ofips <- 1000*allin$State_Code_Origin + allin$County_Code_Origin
-allin$dfips <- 1000*allin$State_Code_Dest + allin$County_Code_Dest
+allin$fips_o <- 1000*allin$State_Code_Origin + allin$County_Code_Origin
+allin$fips_d <- 1000*allin$State_Code_Dest + allin$County_Code_Dest
 
 # OUT DATA
 nonmig <- alloutdata$State_Code_Dest == 63 & alloutdata$County_Code_Dest == 50
@@ -202,8 +202,8 @@ temp$State_Code_Dest  <- 97
 temp$County_Code_Dest <- 0
 allout                <- bind_rows(allout, temp)
 
-allout$ofips <- 1000*allout$State_Code_Origin + allout$County_Code_Origin
-allout$dfips <- 1000*allout$State_Code_Dest + allout$County_Code_Dest
+allout$fips_o <- 1000*allout$State_Code_Origin + allout$County_Code_Origin
+allout$fips_d <- 1000*allout$State_Code_Dest + allout$County_Code_Dest
 
 rm(allindata, alloutdata)
 
@@ -213,8 +213,8 @@ rm(allindata, alloutdata)
 # 30113 for yellowstone (1990)
 trubs <- c("4027", "8014", "35006", "30113")
 allin %>%
-  filter(dfips %in% trubs) %>%
-  xtabs(~dfips + year, data = .) # Broomfield not until 2002, checks out.
+  filter(fips_d %in% trubs) %>%
+  xtabs(~fips_d + year, data = .) # Broomfield not until 2002, checks out.
 
 # AK mentions:
 trubs <- c("2070", "2185", "2261", "2030", "2040", "2065", "2120", "2160",
@@ -229,8 +229,8 @@ trubs <- c("2070", "2185", "2261", "2030", "2040", "2065", "2120", "2160",
            
            "2195", "2105", "2158", "2270")
 allin %>%
-  filter(dfips %in% trubs) %>%
-  xtabs(~dfips + year, data = .)
+  filter(fips_d %in% trubs) %>%
+  xtabs(~fips_d + year, data = .)
 
 # Next step is to fix any county issues ... new counties and merged counties!
 # Need to consider how to do this ... likely just SUM but ignore NA ...
@@ -240,29 +240,29 @@ trubs <- c("51013", "51510", "51515", "51520", "51530", "51540", "51560",
            "51690", "51720", "51730", "51750", "51770", "51775", "51780",
            "51790", "51820", "51840")
 allin %>%
-  filter(dfips %in% trubs) %>%
-  xtabs(~dfips + year, data = .)
+  filter(fips_d %in% trubs) %>%
+  xtabs(~fips_d + year, data = .)
 allin %>%
-  filter(ofips %in% trubs) %>%
-  xtabs(~ofips + year, data = .)
+  filter(fips_o %in% trubs) %>%
+  xtabs(~fips_o + year, data = .)
 
 allout %>% 
-  filter(ofips %in% trubs) %>% 
-  xtabs(~ofips + year, data = .)
+  filter(fips_o %in% trubs) %>% 
+  xtabs(~fips_o + year, data = .)
 
 source("1-Organization/1-Migration_functions.R")
 
 allin <- allin %>% 
-  mutate(dfips = fipchange(dfips), ofips = fipchange(ofips)) %>%
-  group_by(year, dfips, ofips) %>%
+  mutate(fips_d = fipchange(fips_d), fips_o = fipchange(fips_o)) %>%
+  group_by(year, fips_d, fips_o) %>%
   summarise_each(funs(sum(., na.rm = T)), Return_Num, Exmpt_Num, Aggr_AGI)
 allin$Return_Num <- ifelse(allin$Return_Num == 0, NA, allin$Return_Num)
 allin$Exmpt_Num  <- ifelse(is.na(allin$Return_Num), NA, allin$Exmpt_Num)
 allin$Aggr_AGI   <- ifelse(is.na(allin$Return_Num), NA, allin$Aggr_AGI)
 
 allout <- allout %>% 
-  mutate(dfips = fipchange(dfips), ofips = fipchange(ofips)) %>%
-  group_by(year, dfips, ofips) %>%
+  mutate(fips_d = fipchange(fips_d), fips_o = fipchange(fips_o)) %>%
+  group_by(year, fips_d, fips_o) %>%
   summarise_each(funs(sum(., na.rm = T)), Return_Num, Exmpt_Num, Aggr_AGI)
 allout$Return_Num <- ifelse(allout$Return_Num == 0, NA, allout$Return_Num)
 allout$Exmpt_Num  <- ifelse(is.na(allout$Return_Num), NA, allout$Exmpt_Num)
@@ -274,18 +274,18 @@ allout$Aggr_AGI   <- ifelse(is.na(allout$Return_Num), NA, allout$Aggr_AGI)
 # Two groups: one with only 96000 and the other with cty-cty (incl. 98000)
 
 allintotal  <- allin %>% 
-  filter(ofips == 96000, dfips < 57000, dfips %% 1000 != 0) %>% 
-  rename(fips = dfips, IN_Return = Return_Num, IN_Exmpt = Exmpt_Num,
+  filter(fips_o == 96000, fips_d < 57000, fips_d %% 1000 != 0) %>% 
+  rename(fips = fips_d, IN_Return = Return_Num, IN_Exmpt = Exmpt_Num,
          IN_AGI = Aggr_AGI)
 
 allouttotal <- allout %>% 
-  filter(dfips == 96000, ofips < 57000, ofips %% 1000 != 0) %>% 
-  rename(fips = ofips, OUT_Return = Return_Num, OUT_Exmpt = Exmpt_Num,
+  filter(fips_d == 96000, fips_o < 57000, fips_o %% 1000 != 0) %>% 
+  rename(fips = fips_o, OUT_Return = Return_Num, OUT_Exmpt = Exmpt_Num,
          OUT_AGI = Aggr_AGI)
 
 aggdata <- full_join(allintotal, allouttotal)
 aggdata <- aggdata %>% 
-  select(-dfips, -ofips) %>% 
+  select(-fips_d, -fips_o) %>% 
   mutate(NET_Return = IN_Return - OUT_Return,
          NET_Exmpt = IN_Exmpt - OUT_Exmpt,
          NET_AGI = IN_AGI - OUT_AGI)
@@ -298,16 +298,16 @@ rm(allintotal, allouttotal)
 # ---- cty2cty ------------------------------------------------------------
 
 incty <- allin %>% 
-  filter(dfips %% 1000 != 0|dfips == 98000, dfips < 56999|dfips == 98000,
-         ofips %% 1000 != 0|ofips == 98000, ofips < 56999|ofips == 98000) %>% 
+  filter(fips_d %% 1000 != 0|fips_d == 98000, fips_d < 56999|fips_d == 98000,
+         fips_o %% 1000 != 0|fips_o == 98000, fips_o < 56999|fips_o == 98000) %>% 
   mutate(Return_Num = replace(Return_Num, is.na(Return_Num), -1),
          Exmpt_Num  = replace(Exmpt_Num, is.na(Exmpt_Num), -1),
          Aggr_AGI   = replace(Aggr_AGI, is.na(Aggr_AGI), -1)) %>% 
   rename(IN_Return = Return_Num, IN_Exmpt = Exmpt_Num, IN_AGI = Aggr_AGI)
 
 outcty <- allout %>% 
-  filter(dfips %% 1000 != 0|dfips == 98000, dfips < 56999|dfips == 98000,
-         ofips %% 1000 != 0|ofips == 98000, ofips < 56999|ofips == 98000) %>% 
+  filter(fips_d %% 1000 != 0|fips_d == 98000, fips_d < 56999|fips_d == 98000,
+         fips_o %% 1000 != 0|fips_o == 98000, fips_o < 56999|fips_o == 98000) %>% 
   mutate(Return_Num = replace(Return_Num, is.na(Return_Num), -1),
          Exmpt_Num  = replace(Exmpt_Num, is.na(Exmpt_Num), -1),
          Aggr_AGI   = replace(Aggr_AGI, is.na(Aggr_AGI), -1)) %>% 
@@ -347,18 +347,18 @@ data <- data %>%
 temp <- data$Return == -1
 ctycty <- data %>% 
   as.data.frame() %>% 
-  select(year:ofips, Return:AGI) %>% 
+  select(year:fips_o, Return:AGI) %>% 
   mutate(Return = replace(Return, temp, NA),
          Exmpt  = replace(Exmpt, temp, NA),
          AGI    = replace(AGI, temp, NA))
 
 All <- subset(All, FIPS < 57000)
 
-check <- ctycty$dfips %in% All$FIPS
-unique(ctycty$dfips[!check])
+check <- ctycty$fips_d %in% All$FIPS
+unique(ctycty$fips_d[!check])
 # [1]  2195  2198  2230  2105  2275 98000
 
-check <- All$FIPS %in% ctycty$dfips
+check <- All$FIPS %in% ctycty$fips_d
 unique(All$FIPS[!check])
 # [1]  2000  2201  2232  2280 17000 18000 23000 26000 27000 36000 39000
 # [12] 42000 53000 55000
@@ -368,10 +368,10 @@ names(coords) <- c("long", "lat")
 coords$fips   <- as.numeric(row.names(coords))
 
 ctycty <- ctycty %>% 
-  left_join(coords, by = c("ofips" = "fips")) %>% 
-  rename(long.o = long, lat.o = lat) %>% 
-  left_join(coords, by = c("dfips" = "fips")) %>% 
-  rename(long.d = long, lat.d = lat)
+  left_join(coords, by = c("fips_o" = "fips")) %>% 
+  rename(long_o = long, lat_o = lat) %>% 
+  left_join(coords, by = c("fips_d" = "fips")) %>% 
+  rename(long_d = long, lat_d = lat)
 
 write_csv(ctycty, paste0(localDir, "/ctycty.csv"))
 save(ctycty, file = paste0(localDir, "/ctycty.Rda"))
