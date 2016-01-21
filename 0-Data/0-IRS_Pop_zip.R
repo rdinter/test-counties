@@ -26,6 +26,14 @@ url    <- "http://www.irs.gov/file_source/pub/irs-soi/"
 years  <- c(1998, 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010)
 # ALL OF THESE HAVE DIFFERENT STRUCTURES OF VALUES!!!!
 
+################################################
+################################################
+################################################
+################################################
+################################################
+################################################
+
+
 urls   <- paste0(url, years, "zipcode.zip")
 files  <- paste(data_source, basename(urls), sep = "/")
 if (all(sapply(files, function(x) !file.exists(x)))) {
@@ -212,9 +220,9 @@ IRS_POP <- fipssues(IRS_POP, 51019, c(51019, 51515))
 IRS_POP <- fipssues(IRS_POP, 51005, c(51005, 51560))
 IRS_POP <- fipssues(IRS_POP, 51083, c(51083, 51780))
 
-
-write_csv(IRS_POP, paste0(localDir, "/countyincome8913.csv"))
-save(IRS_POP, file = paste0(localDir, "/CTYPop.Rda"))
+# 
+# write_csv(IRS_POP, paste0(localDir, "/countyincome8913.csv"))
+# save(IRS_POP, file = paste0(localDir, "/CTYPop.Rda"))
 
 rm(list = ls())
 

@@ -7,12 +7,12 @@
 print(paste0("Started 0-QCEW at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
-library(reshape2)
+# library(reshape2)
 library(dplyr)
 library(readr)
 source("0-Data/0-functions.R")
 
-
+####################################################################################
 # Create a directory for the data
 localDir <- "0-Data/QCEW"
 data_source <- paste0(localDir, "/Raw")
@@ -23,7 +23,7 @@ tempDir  <- tempdir()
 # unlink(tempDir, recursive = T)
 
 ##### QCEW Data
-years  <- seq(1990,2013)
+years  <- 1990:2013
 url    <- "http://www.bls.gov/cew/data/files/"
 urls   <- paste0(url, years, "/enb/", years, "_all_enb.zip")
 lapply(urls, function(x) bdown(url = x, folder = data_source))
@@ -61,8 +61,8 @@ for (i in files){
                      read.fwf(paste0(tempDir, "/county/", j), fixed)
                    })
     j7 <- read_delim(paste0(tempDir, "/county/", j), delim = "/r", col_names = F)
-    data  <- rbind(data, subset(j6, X4==0 & (X5==0 | X5==5) & X6 %in% naics))
-    data2 <- rbind(data2, j7)
+    data  <- rbind_all(data, subset(j6, X4==0 & (X5==0 | X5==5) & X6 %in% naics))
+    data2 <- rbind_all(data2, j7)
     rm(j6)
   }
   unlink(tempDir, recursive = T)
@@ -111,7 +111,7 @@ for (i in files){
   for (j in j5){
     j6    <- read.fwf(paste0(tempDirr, "/county/", j), widths = fixed)
     j6$V6 <- as.character(j6$V6)
-    data  <- rbind(data, subset(j6, V4==0 & (V5==0 | V5==5) & V6 %in% naics))  
+    data  <- rbind_all(data, subset(j6, V4==0 & (V5==0 | V5==5) & V6 %in% naics))  
   }
   unlink(tempDirr, recursive = T)
   print(paste0("Finished ", basename(i), " at ", Sys.time()))

@@ -2,7 +2,7 @@
 
 # ZIP Code Cross, this will take a substantial amount of time.
 
-print(paste0("Started 0-ZIP_Code_Cross at ", Sys.time()))
+print(paste0("Started 0-ZIP_Cross at ", Sys.time()))
 
 options(scipen=999) #Turn off scientific notation for write.csv()
 library(dplyr)
@@ -10,7 +10,7 @@ library(readr)
 library(sp)
 
 # Create a directory for the data
-localDir   <- "0-Data/ZIP_Code_Cross"
+localDir   <- "0-Data/ZIP_Cross"
 data_source <- paste0(localDir, "/Raw")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
@@ -83,4 +83,4 @@ save(zctap2000, file = paste0(localDir, "/zctap2000.Rda"))
 
 rm(list=ls())
 
-print(paste0("Finished 0-ZIP_Code_Cross at ", Sys.time()))
+print(paste0("Finished 0-ZIP_Cross at ", Sys.time()))

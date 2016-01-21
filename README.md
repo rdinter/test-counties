@@ -13,8 +13,8 @@ The main theme behind this repository is to have an easy to access data-source t
             * Some data cannot be downloaded and must be hosted elsewhere. They will also be in this folder for local use.
         * `Various_Names.csv`
         * `Various_Names.Rda`
-    * `0-functions.R` - relevant functions for this subdirectory.
-    * `.gitignore` - any large files will not be loaded to github.
+    * `0-functions.R` - relevant functions for this sub-directory.
+    * `.gitignore` - any large files will not be loaded to GitHub.
 * 1-Organization/
     * `1-Project_Tidy.R` - script to gather particular data
     * Project/
@@ -58,7 +58,7 @@ Further, other packages needed include: `dplyr`, `ggplot2`, `jsonlite`, `maptool
 
 This is still currently a work in progress. At the moment, here are a few things I know that I will eventually need to tackle:
 
-1. Hosting various datasets (bb loans, FCC data, etc.) on a site so that R scripts are automated.
+1. Hosting various datasets (BB loans, FCC data, etc.) on a site so that R scripts are automated.
 2. Delve into the BEA API and sort through their various data. Document this as well.
 3. Convert Matlab code (for origin-destination models and potentially dynamic spatial ordered probit) to R scripts.
 
