@@ -218,7 +218,7 @@ RegionalData %>%
 
 # Currently, RegionalData is a list. So you cannot write a csv of a list
 
-# write_csv(RegionalData, paste0(localDir, "/RegionalData.csv"))
+write_csv(j5, paste0(localDir, "/RegionalData.csv"))
 save(RegionalData, file = paste0(localDir, "/RegionalData.Rda"))
 
 

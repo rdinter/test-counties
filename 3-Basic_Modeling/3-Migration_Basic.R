@@ -13,15 +13,16 @@ if (!file.exists(localDir)) dir.create(localDir)
 load("1-Organization/Migration/Aggctydata.Rda")
 
 ctydata$unemprate <- ctydata$Unemp / (ctydata$Unemp + ctydata$Emp)
-basic <- subset(ctydata, year == 2008)
+# basic <- subset(ctydata, year == 2008)
 
 
 # --- Aspatial ------------------------------------------------------------
 
-reg0 <- lm(NET_Exmpt ~ DAMAGE_PROPERTY + Pop_IRS + unemprate + Natamen +
+regO <- lm(OUT_Exmpt ~ DAMAGE_PROPERTY + Pop_IRS + unemprate + Natamen +
              factor(year), ctydata)
 
-reg1 <- lm(NET_Exmpt ~ DAMAGE_PROPERTY + Pop_IRS + unemprate + Natamen, basic)
+regI <- lm(IN_Exmpt ~ DAMAGE_PROPERTY + Pop_IRS + unemprate + Natamen +
+             factor(year), ctydata)
 
 
 # --- Poisson -------------------------------------------------------------
