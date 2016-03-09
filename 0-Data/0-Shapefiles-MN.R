@@ -6,6 +6,23 @@ data_source <- paste0(localDir, "/Raw")
 if (!file.exists(localDir)) dir.create(localDir)
 if (!file.exists(data_source)) dir.create(data_source)
 
+# ---- Colorado -----------------------------------------------------------
+
+STdata <- subset(data, STATE == "CO")
+
+CO     <- zcta$ObjectID %in% STdata$ObjectID
+COzcta <- CO[order(CO$ZIP),]
+
+library(spdep)
+weights            <- poly2nb(COzcta)
+summary(weights)
+weights            <- nb2mat(weights, style = "B", zero.policy = T)
+colnames(weights)  <- row.names(weights)
+
+save(weights, file = paste0(localDir, "/contigW-CO.Rda"))
+
+
+
 # ---- North Carolina -----------------------------------------------------
 
 
@@ -15,7 +32,6 @@ NC <- zcta$ObjectID %in% STdata$ObjectID
 NCzcta <- subset(zcta, NC & !(ZIP %in% c(27960, 28465, 28480, 28520)))
 NCzcta <- NCzcta[order(NCzcta$ZIP),]
 
-library(spdep)
 weights            <- poly2nb(NCzcta)
 summary(weights)
 weights            <- nb2mat(weights, style = "B", zero.policy = T)
@@ -66,7 +82,6 @@ weights            <- nb2mat(weights, style = "B", zero.policy = T)
 colnames(weights)  <- row.names(weights)
 
 save(weights, file = paste0(localDir, "/contigW-TX.Rda"))
-
 
 # ---- All ----------------------------------------------------------------
 
