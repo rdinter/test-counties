@@ -38,6 +38,24 @@ ggsave(paste0(localDir, "/Providers_zip_time_alt.png"),
        width = 10, height = 7.5)
 
 
+# ---- ZIP Differences ----------------------------------------------------
+
+zdat <- data %>% arrange(zip, time) %>% group_by(zip) %>% 
+  mutate(prov_diff = c(Prov_num[1], diff(Prov_num)))
+hp <- ggplot(zdat, aes(x = prov_diff)) + geom_histogram(bins=25)
+hp + facet_wrap(~ time) + theme_minimal() +
+  labs(x = "Change in Number of Providers", y = "")#,
+#title = "Broadband Providers by Zip Code \n Across Time")
+ggsave(paste0(localDir, "/Prov_change_unadj.png"), width = 10, height = 7.5)
+
+hp + facet_wrap(~ time) + theme_minimal() +
+  coord_cartesian(ylim = c(0,6000)) +
+  labs(x = "Change in Number of Providers", y = "")#,
+#title = "Broadband Providers by Zip Code \n Across Time")
+ggsave(paste0(localDir, "/Prov_change_adj.png"), width = 10, height = 7.5)
+
+
+
 # ---- Zip Uptake ---------------------------------------------------------
 data %>%
   group_by(time) %>%
@@ -482,7 +500,7 @@ temp <- RUC %>%
   summarise(Prov = weighted.mean(value, SUMBLKPOP + 1))
 
 ggplot(temp, aes(x = time, y = Prov, colour = ruc, group = ruc)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "smooth") +
+  stat_summary(fun.data = "mean_cl_boot", geom = "smooth", size = 2) +
   scale_y_continuous(labels = comma) +
   guides(color = guide_legend(title = "County Class")) +
   theme_minimal() + labs(x = "", y = "Mean Number of Providers") +
