@@ -81,7 +81,8 @@ usa.plot + geom_polygon(aes(fill = metro03)) +
         panel.grid.major=element_blank(), panel.background = element_blank(),
         legend.position = c(0, 0), legend.justification = c(0, 0),
         legend.box = "vertical", legend.box.just = "bottom",
-        legend.background = element_rect(fill = "transparent"))
+        legend.background = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA))
 ggsave(paste0(localDir, "/Loans_alpha.pdf"), width = 10, height = 7.5)
 ggsave(paste0(localDir, "/Loans_alpha.png"), width = 10, height = 7.5)
 
@@ -105,7 +106,8 @@ usa.plot + geom_polygon(aes(fill = metro03)) +
         panel.grid.major=element_blank(), panel.background = element_blank(),
         legend.position = c(0, 0), legend.justification = c(0, 0),
         legend.box = "vertical", legend.box.just = "bottom",
-        legend.background = element_rect(fill = "transparent"))
+        legend.background = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent",colour = NA))
 ggsave(paste0(localDir, "/Loans_size.pdf"), width = 10, height = 7.5)
 ggsave(paste0(localDir, "/Loans_size.png"), width = 10, height = 7.5)
 

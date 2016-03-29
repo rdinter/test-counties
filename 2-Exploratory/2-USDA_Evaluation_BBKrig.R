@@ -74,6 +74,7 @@ system.time(
     return(dtemp)
   })
 )
+saveRDS(krig.year, paste0(localDir, "/kirg.rds"))
 j5 <- bind_rows(krig.year)
 stopCluster(cl)
 
@@ -103,7 +104,7 @@ stopCluster(cl)
 state <- spTransform(state, CRS(aea.proj))
 
 # LOOK INTO CHANGING THE COLOR??
-
+library(viridis)
 ggstate <- fortify(state)
 j5$pred <- cut(j5$var1.pred, breaks = c(0, 2, 3, 5.5, 7.5, 10, Inf),
                labels = c("None", "Suppressed", "Moderate", "Good",
@@ -114,19 +115,63 @@ p <- ggplot(filter(j5, year != 1999), aes(x = long, y = lat)) +
 p + facet_wrap(~year) + 
   geom_path(data = ggstate, aes(x = long, y = lat, group = group),
             color = "black", lwd = 0.25) +
-  scale_color_brewer("", palette = "PuRd") +
+  #scale_color_brewer("", palette = "PuRd") +
+  scale_color_viridis(name = "", option = "C", discrete = T) +
   labs(x = "", y = "") +
-  guides(colour = guide_legend(override.aes = list(shape = 15, size = 10))) +
+  guides(colour = guide_legend(nrow = 1,
+                               override.aes = list(shape = 15, size = 10))) +
   theme(axis.ticks = element_blank(), axis.text.y = element_blank(),
         axis.text.x = element_blank(), panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         panel.background = element_blank(),
         legend.position = "bottom", legend.direction = "horizontal",
         legend.background = element_rect(fill = "transparent"),
-        legend.key = element_blank())
+        legend.key = element_blank(),
+        # strip.background = element_blank(),
+        plot.background = element_rect(fill = "transparent",colour = NA))
 
-ggsave(paste0(localDir, "/BBKrig_diffsize.pdf"), width = 10, height = 7.5)
-ggsave(paste0(localDir, "/BBKrig_diffsize.png"), width = 10, height = 7.5)
+ggsave(paste0(localDir, "/BBKrig_diffsize_vir.pdf"), width = 10, height = 7.5)
+ggsave(paste0(localDir, "/BBKrig_diffsize_vir.png"), width = 10, height = 7.5)
+# 
+# for (i in unique(j5$year)){
+#   p <- ggplot(filter(j5, year == i), aes(x = long, y = lat)) +
+#     geom_point(aes(color = pred), size = 1) + 
+#     geom_path(data = ggstate, aes(x = long, y = lat, group = group),
+#               color = "black", lwd = 0.25) +
+#     scale_color_brewer("", palette = "PuRd") +
+#     labs(x = "", y = "") +
+#     guides(colour = guide_legend(override.aes = list(shape = 15, size = 10))) +
+#     theme(axis.ticks = element_blank(), axis.text.y = element_blank(),
+#           axis.text.x = element_blank(), panel.grid.minor = element_blank(),
+#           panel.grid.major = element_blank(),
+#           panel.background = element_blank(),
+#           legend.position = "bottom", legend.direction = "horizontal",
+#           legend.background = element_rect(fill = "transparent"),
+#           legend.key = element_blank())
+#   
+#   ggsave(paste0(localDir, "/BBKrig_", i, ".png"), p,  width = 1, height = .75)
+# }
+
+
+#devtools::install_github("dgrtwo/gganimate")
+library(gganimate)
+p <- ggplot(j5, aes(x = long, y = lat, frame = year, color = pred)) +
+  geom_point(size = 1) + 
+  geom_path(data = ggstate, aes(x = long, y = lat, group = group, frame = NA),
+            color = "black", lwd = 0.25) +
+  scale_color_viridis(name = "", option = "C", discrete = T) +
+  labs(x = "", y = "") +
+  guides(colour = guide_legend(nrow = 1, 
+                               override.aes = list(shape = 15, size = 10))) +
+  theme(axis.ticks = element_blank(), axis.text.y = element_blank(),
+        axis.text.x = element_blank(), panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "bottom", legend.direction = "horizontal",
+        legend.background = element_rect(fill = "transparent"),
+        legend.key = element_blank(),
+        plot.background = element_rect(fill = "transparent",colour = NA))
+gg_animate(p, paste0(localDir, "/BBKrig_vir.gif"))
 
 
 # rm(list = ls())
