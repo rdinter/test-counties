@@ -500,12 +500,16 @@ temp <- RUC %>%
   summarise(Prov = weighted.mean(value, SUMBLKPOP + 1))
 
 ggplot(temp, aes(x = time, y = Prov, colour = ruc, group = ruc)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "smooth", size = 2) +
+  stat_smooth(size = 2) +
+  geom_vline(xintercept = as.numeric(as.Date("2001-12-31")),
+             color = "black", linetype = "longdash") +
+  geom_vline(xintercept = as.numeric(as.Date("2003-12-31")),
+             color = "red", linetype = "longdash") +
   scale_y_continuous(labels = comma) +
   guides(color = guide_legend(title = "County Class")) +
   theme_minimal() + labs(x = "", y = "Mean Number of Providers") +
   theme(legend.position = "bottom",
-        strip.text.y = element_text(size = 10, face = "bold"))
+        strip.text.y = element_text(size = 20, face = "bold"))
 ggsave(paste0(localDir, "/Providers_zip_time_RUC.png"),
        width = 10, height = 7.5)
 
