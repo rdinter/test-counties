@@ -77,6 +77,28 @@ sc2 + stat_smooth() + theme_minimal() +
 #title = "Zip Codes without Broadband Access")
 ggsave(paste0(localDir, "/ZIP_no_bb_down.png"), width = 10, height = 7.5)
 
+data$class <- ifelse(data$iloans, "Loan", "None")
+data$class <- ifelse(data$ipilot, "Pilot", data$class)
+data$class <- ifelse(data$ibip1234, "Farm Bill", data$class)
+data$class <- factor(data$class, levels = c("None", "Pilot", "Farm Bill"))
+data$Access <- 1*(data$Prov_num != 0)
+
+j5 <- ggplot(data, aes(x = time, y = 1-Access, color = class, group = class)) +
+  stat_smooth(size = 2) +
+  labs(x = "Year", y = "Proportion without Broadband Access") +
+  guides(color = guide_legend(title = "Loan Type")) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        strip.text.y = element_text(size = 10, face = "bold"))
+ggsave(paste0(localDir, "/ZIP_no_bb_down_class.png"), j5, width = 10, height = 7.5)
+
+j5 + geom_vline(xintercept = as.numeric(as.Date("2001-12-31")),
+                color = "black", linetype = "longdash") +
+  geom_vline(xintercept = as.numeric(as.Date("2003-12-31")),
+             color = "red", linetype = "longdash")
+ggsave(paste0(localDir, "/ZIP_no_bb_down_class-loans.png"),
+       width = 10, height = 7.5)
+
 
 # ---- Loan Time ----------------------------------------------------------
 # When did the loans occur:
