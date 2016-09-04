@@ -17,49 +17,40 @@ if (!file.exists(data_source)) dir.create(data_source)
 
 # FCC County Data
 # http://www.fcc.gov/Bureaus/Common_Carrier/Reports/FCC-State_Link/IAD/
+# https://www.fcc.gov/sites/default/files/tract_map_dec2014_0.zip
 url   <- "http://www.fcc.gov/Bureaus/Common_Carrier/Reports/FCC-State_Link/IAD/"
 files <- c("csv_dec_2008_tract.zip", "csv_tractdata_june_2009.zip",
            "csv_tractdata_dec_2009.zip", "csv_tractdata_june_2010.zip",
            "csv_tractdata_dec_2010.zip", "csv_tractdata_june_2011.zip",
            "csv_tractdata_dec_2011.zip", "csv_tractdata_june_2012.zip",
            "csv_tractdata_dec_2012.zip", "csv_tractdata_june_2013.zip",
-           "csv_tractdata_dec_2013.zip")
+           "csv_tractdata_dec_2013.zip", "tract_map_dec2014_0.zip")
 urls  <- paste0(url, files)
 files <- paste(data_source, files, sep = "/")
 if (all(sapply(files, function(x) !file.exists(x)))) {
   mapply(download.file, url = urls, destfile = files, method = "libcurl")
 }
 
-# Add in the 2010 to 2014: http://www2.ntia.doc.gov/broadband-data
-
 tempDir  <- tempdir()
 lapply(files, function(x) unzip(x, exdir = tempDir))
-files <- list.files(tempDir, pattern = "*.csv")
+files    <- list.files(tempDir, pattern = "*.csv", full.names = T)
 
-data  <- data.frame()
-for (i in files) {
-  file     <- paste(tempDir, i, sep = "/")
-  inp      <- read_csv(file)
-  tmp      <- substr(i, nchar(i) - 11, nchar(i) - 4)
-  inp$year <- as.Date(paste0(1,tmp), format = "%d%b_%Y")
-  cname    <- name <- sub(".csv", "", i)
-  
-  cat("Read:", i, "\trows: ", nrow(inp), " cols: ", ncol(inp), 
-      "\n")
-  
-  data <- bind_rows(data, inp)
-  rm(inp)
-}
-# apply(data, 2, function(x) sum(is.na(x)))
+fcc_sapply <- sapply(files, function(x){
+  inp      <- read_csv(x)
+  tmp      <- substr(x, nchar(x) - 11, nchar(x) - 4)
+  inp$date <- as.Date(paste0(1, tmp), format = "%d%b_%Y")
+  cname    <- name <- sub(".csv", "", x)
+  return(inp)
+})
+fcc <- bind_rows(fcc_sapply)
 
-miss <- is.na(data$rfc_per_1000_hhs)
-data$rfc_per_1000_hhs[miss] <- data$rfhsc_per_1000_hhs[miss]
+fcc <- fcc %>% 
+  mutate(rfc_per_1000_hhs = coalesce(rfc_per_1000_hhs, rfhsc_per_1000_hhs),
+         rfc_per_1000_hhs_btop = coalesce(rfc_per_1000_hhs_btop, 
+                                          rfhsc_per_1000_hhs_btop)) %>% 
+  select(-rfhsc_per_1000_hhs, -rfhsc_per_1000_hhs_btop)
 
-miss <- is.na(data$rfc_per_1000_hhs_btop)
-data$rfc_per_1000_hhs_btop[miss] <- data$rfhsc_per_1000_hhs_btop[miss]
-
-data$rfhsc_per_1000_hhs <- data$rfhsc_per_1000_hhs_btop <- NULL
-
+saveRDS(fcc, paste0(localDir, "/FCC_tract_08-13.rds"))
 write_csv(data, paste0(localDir,"/FCC_tract_08-13.csv"))
 
 rm(list = ls())
